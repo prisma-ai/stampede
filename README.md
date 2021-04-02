@@ -6,6 +6,10 @@ Graph-level abstraction over heavy computations.
 2. Full typesafety
 3. Separate independent computational traits (i.e. caching)
 
+## Table of contents
+1. [How to use](#how-to-use)
+2. [Building](#building)
+
 ## How to use
 
 Suppose we want to add two number, the calculation of which is a heavy operation.
@@ -103,7 +107,7 @@ In example we assigning:
 #define NODES IndexedNode <0, Id<>> , IndexedNode <1, AsyncHeavy_0<>>, IndexedNode <2, AsyncHeavy_1<>>, IndexedNode <3, Sum<>>
 ```
 
-2. Declare edges that forms ` node_id <- dependecies_ids > `
+4. Declare edges that forms ` node_id <- dependecies_ids > `
 In example we assuming that:
 * inputs for `Sum<>` (id `3`) is `AsyncHeavy_0<>` (id `1`) and `AsyncHeavy_1<>` (id `2`)
 * input for `AsyncHeavy_0<>` (id `1`) is `Id<>` (id `0`)
@@ -112,7 +116,7 @@ In example we assuming that:
 #define EDGES Edge<3, std::tuple< IntType<1>, IntType<2> >> , Edge<2, std::tuple< IntType<0> >>, Edge<1, std::tuple< IntType<0> >>
 ```
 
-3. Run computations
+5. Run computations
 In example we're assuming that `Id<>` (id `0`) will be source, `Sum<>` (id `3`) will be target node
 ```
 std::tuple<int> input = ...;
@@ -128,7 +132,7 @@ cmake ..
 make
 ./graph_proc
 ```
-For using in another CMake projects:
+For using in another CMake project:
 CMakeLists.txt
 ```
 ...
