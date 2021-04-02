@@ -17,6 +17,7 @@ Suppose we want to add two number, the calculation of which is a heavy operation
 `f(x) = Add( Heavy_0(Id(x)) , Heavy_1(Id(x)) )`
 
 1. Implement `Node`'s with necessary computations
+
 Prototype:
 ```
 template <typename...>
@@ -88,6 +89,7 @@ private:
 ```
 
 2. Extends your `Node`'s with necessary traits
+
 In example we want to parallelize our heavy operations.
 ```
 #include <Trait.h>
@@ -97,6 +99,7 @@ using AsyncHeavy_1 = AsyncTrait<Heavy_1<>>;
 ```
 
 3. Enumerate `Node`'s with indicies
+
 In example we assigning:
 * `Id<>` with id `0`
 * `AsyncHeavy_0<>` with id `1`
@@ -108,6 +111,7 @@ In example we assigning:
 ```
 
 4. Declare edges that forms ` node_id <- dependecies_ids > `
+
 In example we assuming that:
 * inputs for `Sum<>` (id `3`) is `AsyncHeavy_0<>` (id `1`) and `AsyncHeavy_1<>` (id `2`)
 * input for `AsyncHeavy_0<>` (id `1`) is `Id<>` (id `0`)
@@ -117,6 +121,7 @@ In example we assuming that:
 ```
 
 5. Run computations
+
 In example we're assuming that `Id<>` (id `0`) will be source, `Sum<>` (id `3`) will be target node
 ```
 std::tuple<int> input = ...;
@@ -133,6 +138,7 @@ make
 ./graph_proc
 ```
 For using in another CMake project:
+
 CMakeLists.txt
 ```
 ...
