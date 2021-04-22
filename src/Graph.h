@@ -12,7 +12,7 @@
 #include <future>
 #include <unordered_map>
 
-constexpr static auto CTOR_DTOR_LOG = false;
+constexpr static auto BASE_GRAPH_CALLS_LOG = false;
 
 
 template<typename T>
@@ -45,20 +45,29 @@ struct Node {
 
     explicit Node(const std::string &tag) {
         tag_ = tag;
-        if constexpr (CTOR_DTOR_LOG) {
+        if constexpr (BASE_GRAPH_CALLS_LOG) {
             std::cout << tag_ << " created" << std::endl;
         }
     }
 
     ~Node() {
-        if constexpr (CTOR_DTOR_LOG) {
+        if constexpr (BASE_GRAPH_CALLS_LOG) {
             std::cout << tag_ << " destroyed" << std::endl;
         }
     }
 
 
     OutputT runPack(std::tuple<InputsT...> args) {
+        if constexpr (BASE_GRAPH_CALLS_LOG) {
+            std::cout << tag_ << " executed" << std::endl;
+        }
         return static_cast<Impl<OutputT, InputsT...> *>(this)->runImpl(args);
+    }
+
+    void gc() {
+        if constexpr (BASE_GRAPH_CALLS_LOG) {
+            std::cout << tag_ << " gced" << std::endl;
+        }
     }
 
 
@@ -138,105 +147,27 @@ struct PrerequisitesForPack<NodeIdx, Head, Tail...> {
             typename PrerequisitesForPack<NodeIdx, Tail...>::type>;
 };
 
+
 template<int NodeIdx, typename Head>
 struct PrerequisitesForPack<NodeIdx, Head> {
-    using type = std::conditional_t<Head::source == NodeIdx, typename Head::ids, void>;
-};
-
-
-template<typename...Nodes>
-struct Context {
-    using AllNodes = std::tuple<typename Nodes::type...>;
-    AllNodes allNodes {};
-};
-
-template<typename Applier, typename Input, typename Output, typename Ids>
-struct SequenceMap {
-
-    template<typename Context, int ...Ts>
-    auto apply(Context& context, Input input, std::integer_sequence<int, Ts...>) -> Output {
-        Applier applier;
-
-        return {applier.template topDown<std::tuple_element_t<Ts, Ids>::value>(context, input)...};
-    }
+    using type = std::conditional_t<Head::source == NodeIdx, typename Head::ids, std::tuple<>>;
 };
 
 
 
+template<int NodeIdx, typename PrerequisitesTuple>
+struct PrerequisitesForTuple;
 
-template<typename ...Nodes>
-struct extractWith {
-    template<typename TypesTuple>
-    struct outputsFor;
 
-    template<typename... Ts>
-    struct outputsFor<std::tuple<Ts...>> {
-        using type = std::tuple<typename NodeAtPack<Ts::value ,Nodes...>::type::Output ...>;
-    };
+template<int NodeIdx, typename ...Preqs>
+struct PrerequisitesForTuple<NodeIdx, std::tuple<Preqs...>> {
+    using type = typename PrerequisitesForPack<NodeIdx, Preqs...>::type;
 };
 
 
 
 
 
-template<typename...Nodes>
-struct withNodes {
-    template<typename...Edges>
-    struct andEdges {
-        template<int SourceId>
-        struct fixedInput;
-
-
-        template<int SourceId, int DestId>
-        typename NodeAtPack<DestId, Nodes...>::type::Output
-        topDown(typename NodeAtPack<SourceId, Nodes...>::type::Inputs args) {
-            Context<Nodes...> context;
-            return topDown<SourceId, DestId>(context, args);
-        }
-
-        template<int SourceId, int DestId>
-        typename NodeAtPack<DestId, Nodes...>::type::Output
-        topDown(Context<Nodes...> &context, typename NodeAtPack<SourceId, Nodes...>::type::Inputs args) {
-            using Source = typename NodeAtPack<SourceId, Nodes...>::type;
-            using Dest = typename NodeAtPack<DestId, Nodes...>::type;
-
-
-            auto dest = &std::get<DestId>(context.allNodes);
-
-            if constexpr(SourceId == DestId) {
-                return dest->runPack(args);
-            } else {
-                using Prerequisites = typename PrerequisitesForPack<DestId, Edges...>::type;
-                using PrerequisitesOutputs = typename extractWith<Nodes...>::template outputsFor<Prerequisites >::type ;
-
-                auto indexes = std::make_integer_sequence<int, std::tuple_size_v<typename Dest::Inputs>>{};
-
-                auto inputsTemp = SequenceMap<
-                        withNodes<Nodes...>::andEdges<Edges...>::fixedInput<SourceId>,
-                        typename NodeAtPack<SourceId, Nodes...>::type::Inputs,
-                        PrerequisitesOutputs ,
-                        Prerequisites>{}.apply(context, args, indexes);
-
-
-                // sequence point
-                auto values = std::apply([](auto ...x) -> typename Dest::Inputs { return std::make_tuple(value(x)...); }, inputsTemp);
-
-                return dest->runPack(values);
-
-            }
-        }
-
-        template<int SourceId>
-        struct fixedInput {
-            template<int DestId>
-            typename NodeAtPack<DestId, Nodes...>::type::Output
-            topDown(Context<Nodes...> &context, typename NodeAtPack<SourceId, Nodes...>::type::Inputs args) {
-                return withNodes<Nodes...>::andEdges<Edges...>{}.topDown<SourceId, DestId>(context, args);
-            }
-        };
-
-    };
-};
 
 #endif //GRAPH_PROC_GRAPH_H
 

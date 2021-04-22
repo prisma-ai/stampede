@@ -67,4 +67,8 @@ private:
 #define TestCacheEdges Edge<1, std::tuple<IntType<0>, IntType<0>>>
 
 
+#define TestGCNodes IndexedNode<0, Id<> >, IndexedNode<1, LongOp1<> >, IndexedNode<2, Summer<> >
+#define TestGCEdges Edge<2, std::tuple<  IntType<0>, IntType<1>  >  >, Edge<1, std::tuple<  IntType<0>  >  >
+
+
 #endif //GRAPH_PROC_TEST_H

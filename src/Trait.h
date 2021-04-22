@@ -35,11 +35,22 @@ struct CacheTrait : NextT {
             }
             cache.data = static_cast<Next *>(this)->runPack(args);
         } else {
-            std::cout << "using cached" << std::endl;
+            if constexpr (TRAIT_LOG) {
+                std::cout << "using cached" << std::endl;
+            }
         }
 
 
         return cache;
+    }
+
+    void gc() {
+        cache.data = {};
+        static_cast<Next *>(this)->gc();
+
+        if constexpr (TRAIT_LOG) {
+            std::cout << "cache gced" << std::endl;
+        }
     }
 };
 
@@ -67,6 +78,10 @@ struct AsyncTrait : NextT {
                                    &Next::runPack, static_cast<Next *>(this), args)};
 
         return task;
+    }
+
+    void gc() {
+        static_cast<Next *>(this)->gc();
     }
 };
 

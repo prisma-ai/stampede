@@ -7,7 +7,6 @@
 #include <optional>
 
 
-
 template <typename...>
 class Summer : public Node<Summer, int, int, int> {
     friend class Node;

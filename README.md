@@ -120,12 +120,22 @@ In example we assuming that:
 #define EDGES Edge<3, std::tuple< IntType<1>, IntType<2> >> , Edge<2, std::tuple< IntType<0> >>, Edge<1, std::tuple< IntType<0> >>
 ```
 
+5. Select garbage-collection policy
+
+By default all nodes instances has same lifecycle as `Context` (`GCPlan == NoPlan`).
+
+If you need clear intermediate data (such as a cache) as soon as possible (then there are no other nodes remains thats uses this data ) you can select this behaviour.
+```
+#define PLAN BFSLastRecentlyUsedGCPlanImpl
+```
+
+
 5. Run computations
 
 In example we're assuming that `Id<>` (id `0`) will be source, `Sum<>` (id `3`) will be target node
 ```
 std::tuple<int> input = ...;
-auto output = withNodes<NODES>::andEdges<EDGES>{}.topDown<0, 3>( input );
+auto output = withNodes<NODES>::andEdges<EDGES>{}.execute<0, 3, PLAN>( input );
 ```
 ## Building
 
