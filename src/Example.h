@@ -12,6 +12,7 @@ class Summer : public Node<Summer, int, int, int> {
     friend class Node;
 
 public:
+
     Summer(): Node<Summer, int, int, int>("summer") {}
 private:
     int runImpl(std::tuple<int, int> args) {
@@ -36,6 +37,7 @@ template <typename...>
 class Stringify : public Node<Stringify, std::string, int> {
     friend class Node;
 public:
+
     Stringify(): Node<Stringify, std::string, int>("stringify") {}
 private:
     std::string runImpl(std::tuple<int> args) {
@@ -58,26 +60,6 @@ private:
         return os.str();
     }
 };
-//
-//template <typename...>
-//class A : public Node<A, Unit, Unit> {
-//    friend class Node;
-//private:
-//    Unit runImpl(std::tuple<Unit> _) {
-//        std::cout << "A" << std::endl;
-//        return {};
-//    }
-//};
-//
-//template <typename...>
-//class B : public Node<B, Unit, Unit > {
-//    friend class Node;
-//private:
-//    Unit runImpl(std::tuple<Unit> _) {
-//        std::cout << "B" << std::endl;
-//        return {};
-//    }
-//};
 
 
 

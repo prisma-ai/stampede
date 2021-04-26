@@ -11,7 +11,7 @@
 struct BFSLastRecentlyUsedGCPlan { };
 
 
-template<int from, typename ...Edges>
+template<typename FromTuple, typename ...Edges>
 struct BFSLastRecentlyUsedGCPlanImpl {
 
     template<typename NodeId, typename InDegreeCount>
@@ -31,14 +31,14 @@ struct BFSLastRecentlyUsedGCPlanImpl {
 
 
     using InDegrees = std::tuple<
-            InDegree<IntType<Edges::source>, IntType<std::tuple_size_v<typename Edges::ids>>>...
+            InDegree<Int<Edges::source>, Int<std::tuple_size_v<typename Edges::ids>>>...
     >;
 
     template <int source, typename ID>
     struct FindAndDecrease {
         using type = std::conditional_t<
                                 source == ID::nodeid_v,
-                                InDegree<typename ID::nodeid_t, IntType<ID::count_v - 1>>,
+                                InDegree<typename ID::nodeid_t, Int<ID::count_v - 1>>,
                                 ID>;
     };
 
@@ -118,7 +118,7 @@ struct BFSLastRecentlyUsedGCPlanImpl {
 
     template<typename Path, typename InDegreesInfo, typename IQHead, typename ...IQTail>
     struct Kahns<Path, InDegreesInfo, std::tuple<IQHead, IQTail...>> {
-        using path = typename concat<Path>::template with<std::tuple<IntType<IQHead::value>>>::type;
+        using path = typename concat<Path>::template with<std::tuple<Int<IQHead::value>>>::type;
         using neighbours = typename PrerequisitesForTuple<IQHead::value, Transposed>::type;
 
         using newInDegrees = typename DecreaseInDegrees<InDegreesInfo, neighbours>::type;
@@ -135,7 +135,7 @@ struct BFSLastRecentlyUsedGCPlanImpl {
         using type = typename Kahns<path, newInDegrees, newQueue>::type;
     };
 
-    using path = typename Kahns<std::tuple<>, InDegrees, std::tuple<IntType<from>>>::type;
+    using path = typename Kahns<std::tuple<>, InDegrees, FromTuple >::type;
 
 
 //    const foldl
@@ -157,7 +157,7 @@ struct BFSLastRecentlyUsedGCPlanImpl {
 
         using id = std::conditional_t<
                 V == PHead::value,
-                IntType<V>,
+                Int<V>,
                 std::conditional_t<
                         nodeContainsVAsPrereq,
                         PHead,
@@ -181,7 +181,7 @@ struct BFSLastRecentlyUsedGCPlanImpl {
     template<typename RPath, typename PHead, typename ...PTail>
     struct GCMap<RPath, std::tuple<PHead, PTail...>> {
         using lastUsed = typename lastUsedNode<PHead::value, RPath>::id;
-        using newMap = std::tuple<lastUsed, IntType<PHead::value>>;
+        using newMap = std::tuple<lastUsed, Int<PHead::value>>;
         using tail = typename GCMap<RPath, std::tuple<PTail...>>::type;
         using type = typename concat<std::tuple<newMap>>::template with<tail>::type;
     };

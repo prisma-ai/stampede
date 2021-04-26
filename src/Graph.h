@@ -10,10 +10,16 @@
 #include <iostream>
 #include <experimental/type_traits>
 #include <future>
-#include <unordered_map>
+#include "FuncHelper.h"
+#include "Compose.h"
+
+
+#define declare_node(name, id, function_body)
+
+
+
 
 constexpr static auto BASE_GRAPH_CALLS_LOG = false;
-
 
 template<typename T>
 using value_t = decltype(std::declval<T &>().value());
@@ -77,7 +83,7 @@ struct Node {
 };
 
 template<int I>
-struct IntType {
+struct Int {
     constexpr static int value = I;
 };
 
@@ -135,8 +141,7 @@ struct NodeAt {
 
 
 template<int NodeIdx, typename ...Edges>
-struct PrerequisitesForPack {
-};
+struct PrerequisitesForPack { };
 
 
 template<int NodeIdx, typename Head, typename...Tail>
@@ -164,6 +169,47 @@ struct PrerequisitesForTuple<NodeIdx, std::tuple<Preqs...>> {
     using type = typename PrerequisitesForPack<NodeIdx, Preqs...>::type;
 };
 
+struct NotFound {};
+
+template<int Id, int Counter, typename IdsTuple>
+struct FindInputPosition;
+
+template<int Id, int Counter>
+struct FindInputPosition<Id, Counter, std::tuple<>> {
+    using type = NotFound;
+};
+
+template<int Id, int Counter, typename Head, typename ...Tail>
+struct FindInputPosition<Id, Counter, std::tuple<Head, Tail...>> {
+    using type = std::conditional_t<
+                Head::value == Id,
+                Int<Counter>,
+                typename FindInputPosition<Id, Counter + 1, std::tuple<Tail...>>::type
+            >;
+};
+
+template<typename Id, typename ...Nodes>
+struct NodeInputArgsForMap {
+    using type = typename NodeAtPack<Id::value, Nodes...>::type::Inputs;
+};
+
+template<typename IdsTuple, typename ...Nodes>
+struct ArgsPackFor {
+    template <typename Id>
+    using nodeInputArgsForMap = NodeInputArgsForMap<Id, Nodes...>;
+
+    using type = typename map<nodeInputArgsForMap , IdsTuple>::type;
+//
+
+
+};
+
+template<int...Ids>
+using Deps = std::tuple<Int<Ids>...>;
+
+
+template<int...Ids>
+using Inputs = Deps<Ids...>;
 
 
 

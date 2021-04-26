@@ -117,7 +117,7 @@ In example we assuming that:
 * input for `AsyncHeavy_0<>` (id `1`) is `Id<>` (id `0`)
 * input for `AsyncHeavy_0<>` (id `2`) is `Id<>` (id `0`)
 ```
-#define EDGES Edge<3, std::tuple< IntType<1>, IntType<2> >> , Edge<2, std::tuple< IntType<0> >>, Edge<1, std::tuple< IntType<0> >>
+#define EDGES Edge<3, std::tuple< Int<1>, Int<2> >> , Edge<2, std::tuple< Int<0> >>, Edge<1, std::tuple< Int<0> >>
 ```
 
 5. Select garbage-collection policy
@@ -135,7 +135,7 @@ If you need clear intermediate data (such as a cache) as soon as possible (then 
 In example we're assuming that `Id<>` (id `0`) will be source, `Sum<>` (id `3`) will be target node
 ```
 std::tuple<int> input = ...;
-auto output = withNodes<NODES>::andEdges<EDGES>{}.execute<0, 3, PLAN>( input );
+auto output = withNodes<NODES>::andEdges<EDGES>{}.execute<Inputs<Int<0>>, 3, PLAN>( { input } );
 ```
 ## Building
 

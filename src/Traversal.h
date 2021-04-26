@@ -16,7 +16,7 @@ struct PrerequisitesIdFor {
     static auto find() {
         if constexpr (Counter < std::tuple_size_v<EdgesTuple> ) {
             if constexpr(std::tuple_element_t<Counter, EdgesTuple>::source == NodeIdx) {
-                return type_t<IntType<Counter>>{};
+                return type_t<Int<Counter>>{};
             } else {
                 return type_t<typename PrerequisitesIdFor<NodeIdx, Counter + 1, EdgesTuple>::type>{};
             }
@@ -95,7 +95,7 @@ struct transpose<std::tuple<HEdge>> {
     struct inner<Collector, Edge<V, std::tuple<Ids...>>> {
         using type = typename addOrCreatePrerequisites<Collector,
                 std::tuple<
-                        Edge<Ids::value, std::tuple<IntType<V>>>...
+                        Edge<Ids::value, std::tuple<Int<V>>>...
                         >
                 >::type;
     };
@@ -118,7 +118,7 @@ struct transpose<std::tuple<HEdge, TEdges...>> {
                 std::tuple<
                         Edge<
                           Ids::value,
-                          std::tuple<IntType<V>>
+                          std::tuple<Int<V>>
                           >...
                         >
                 >::type;

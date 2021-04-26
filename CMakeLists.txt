@@ -3,4 +3,4 @@ project(graph_proc)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(graph_proc main.cpp src/Graph.h src/Test.h src/Trait.h src/Traversal.h src/Executor.h src/BFSLastRecentlyUsedGCPlan.h src/FuncHelper.h src/GCPlan.h)
+add_executable(graph_proc main.cpp src/Graph.h src/Test.h src/Trait.h src/Traversal.h src/Executor.h src/BFSLastRecentlyUsedGCPlan.h src/FuncHelper.h src/GCPlan.h src/Compose.h)

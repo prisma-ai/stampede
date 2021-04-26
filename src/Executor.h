@@ -24,7 +24,7 @@ struct SequenceMap {
     constexpr auto apply(Context &context, Input input, std::integer_sequence<int, Ts...>) -> Output {
         Applier applier;
 
-        return { applier.template topDown<std::tuple_element_t<Ts, Ids>::value, Plan>(context, input)... };
+        return {applier.template topDown<std::tuple_element_t<Ts, Ids>::value, Plan>(context, input)...};
     }
 };
 
@@ -35,20 +35,20 @@ struct planApplier;
 
 template<int id, typename PHead, typename ...PTail>
 struct planApplier<id, std::tuple<PHead, PTail...>> {
-    template <typename Context>
+    template<typename Context>
     constexpr auto apply(Context &context) {
         if constexpr (id == PlanLast<PHead>::value) {
             constexpr auto depId = PlanDep<PHead>::value;
             (&std::get<depId>(context.allNodes))->gc();
         }
-        planApplier<id, std::tuple<PTail...>> {}.template apply<Context>(context);
+        planApplier<id, std::tuple<PTail...>>{}.template apply<Context>(context);
     }
 };
 
 template<int id>
 struct planApplier<id, std::tuple<>> {
-    template <typename Context>
-    constexpr auto apply(Context &context) { }
+    template<typename Context>
+    constexpr auto apply(Context &context) {}
 };
 
 
@@ -65,42 +65,47 @@ struct withNodes {
 
     template<typename...Edges>
     struct andEdges {
-
-
-        template<int SourceId>
-        struct fixedInput;
-
-        template <int SourceId, int DestId, typename GCPlan = NoPlan>
-        typename NodeAtPack<DestId, Nodes...>::type::Output execute(typename NodeAtPack<SourceId, Nodes...>::type::Inputs args) {
+        template<typename SourcesIds, int DestId, typename GCPlan = NoPlan>
+        typename NodeAtPack<DestId, Nodes...>::type::Output
+        execute(typename ArgsPackFor<SourcesIds, Nodes...>::type args) {
             if constexpr (std::is_same_v<GCPlan, BFSLastRecentlyUsedGCPlan>) {
-                using gcPlan = typename BFSLastRecentlyUsedGCPlanImpl<SourceId, Edges...>::gcMap ;
-                return topDown<SourceId, DestId, gcPlan>(args);
+                using gcPlan = typename BFSLastRecentlyUsedGCPlanImpl<SourcesIds, Edges...>::gcMap;
+                return topDown<SourcesIds, DestId, gcPlan>(args);
             } else {
-                return topDown<SourceId, DestId, NoPlan>(args);
+                return topDown<SourcesIds, DestId, NoPlan>(args);
             }
         };
 
 
-        template<int SourceId, int DestId, typename Plan = NoPlan>
+
+        template<typename SourcesIds, int DestId, typename Plan = NoPlan>
         typename NodeAtPack<DestId, Nodes...>::type::Output
-        topDown(typename NodeAtPack<SourceId, Nodes...>::type::Inputs args) {
+        topDown(typename ArgsPackFor<SourcesIds, Nodes...>::type args) {
             Context<Nodes...> context;
-            return topDown<SourceId, DestId, Plan>(context, args);
+            return topDown<SourcesIds, DestId, Plan>(context, args);
         }
 
-        template<int SourceId, int DestId, typename Plan = NoPlan>
+
+
+        template<typename SourcesIds, int DestId, typename Plan = NoPlan>
         typename NodeAtPack<DestId, Nodes...>::type::Output
-        topDown(Context<Nodes...> &context, typename NodeAtPack<SourceId, Nodes...>::type::Inputs args) {
-            using Source = typename NodeAtPack<SourceId, Nodes...>::type;
+        topDown(Context<Nodes...> &context, typename ArgsPackFor<SourcesIds, Nodes...>::type args) {
+
             using Dest = typename NodeAtPack<DestId, Nodes...>::type;
 
 
             auto dest = &std::get<DestId>(context.allNodes);
 //            auto dest = Dest{};
 
-            if constexpr(SourceId == DestId) {
-                return dest->runPack(args);
+
+            using sourceInDest = typename FindInputPosition<DestId, 0, SourcesIds>::type;
+
+            if constexpr(!std::is_same_v<sourceInDest , NotFound>) {
+                return dest->runPack(std::get<sourceInDest::value>(args));
             } else {
+
+                constexpr auto SourceId = std::tuple_element_t <0, SourcesIds>::value;
+
                 using Prerequisites = typename PrerequisitesForPack<DestId, Edges...>::type;
                 using PrerequisitesOutputs = typename withNodes<Nodes...>::template outputsFor<Prerequisites>::type;
 
@@ -108,8 +113,8 @@ struct withNodes {
 
                 auto inputsTemp = SequenceMap<
                         Plan,
-                        withNodes<Nodes...>::andEdges<Edges...>::fixedInput<SourceId>,
-                        typename NodeAtPack<SourceId, Nodes...>::type::Inputs,
+                        withNodes<Nodes...>::andEdges<Edges...>::fixedInput<SourcesIds>,
+                        typename ArgsPackFor<SourcesIds, Nodes...>::type,
                         PrerequisitesOutputs,
                         Prerequisites>{}.apply(context, args, indexes);
 
@@ -127,18 +132,17 @@ struct withNodes {
                 }
 
 
-
                 return output;
 
             }
         }
 
-        template<int SourceId>
+        template<typename SourcesIds>
         struct fixedInput {
             template<int DestId, typename Plan>
             typename NodeAtPack<DestId, Nodes...>::type::Output
-            topDown(Context<Nodes...> &context, typename NodeAtPack<SourceId, Nodes...>::type::Inputs args) {
-                return withNodes<Nodes...>::andEdges<Edges...>{}.topDown<SourceId, DestId, Plan>(context, args);
+            topDown(Context<Nodes...> &context, typename ArgsPackFor<SourcesIds, Nodes...>::type args) {
+                return withNodes<Nodes...>::andEdges<Edges...>{}.topDown<SourcesIds, DestId, Plan>(context, args);
             }
         };
 
