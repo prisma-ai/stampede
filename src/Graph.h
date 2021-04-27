@@ -63,12 +63,16 @@ struct Node {
     }
 
 
-    OutputT runPack(std::tuple<InputsT...> args) {
+    template <int ...N>
+    OutputT runPack(std::tuple<InputsT...> args, std::integer_sequence<int, N...>) {
         if constexpr (BASE_GRAPH_CALLS_LOG) {
             std::cout << tag_ << " executed" << std::endl;
         }
-        return static_cast<Impl<OutputT, InputsT...> *>(this)->runImpl(args);
+        return static_cast<Impl<OutputT, InputsT...> *>(this)->runImpl(std::get<N>(args)...);
     }
+
+
+
 
     void gc() {
         if constexpr (BASE_GRAPH_CALLS_LOG) {

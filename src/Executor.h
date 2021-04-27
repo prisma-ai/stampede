@@ -101,7 +101,13 @@ struct withNodes {
             using sourceInDest = typename FindInputPosition<DestId, 0, SourcesIds>::type;
 
             if constexpr(!std::is_same_v<sourceInDest , NotFound>) {
-                return dest->runPack(std::get<sourceInDest::value>(args));
+//
+                using indexes = std::make_integer_sequence<int, std::tuple_size_v<
+                        std::tuple_element_t<sourceInDest::value, typename ArgsPackFor<SourcesIds, Nodes...>::type>
+                        >>;
+
+
+                return dest->runPack(std::get<sourceInDest::value>(args), indexes{});
             } else {
 
                 constexpr auto SourceId = std::tuple_element_t <0, SourcesIds>::value;
@@ -124,7 +130,9 @@ struct withNodes {
                         [](auto ...x) -> typename Dest::Inputs { return std::make_tuple(value(x)...); }, inputsTemp);
 
 
-                auto output = dest->runPack(values);
+
+                auto output = dest->runPack(values,
+                        std::make_integer_sequence<int, std::tuple_size_v<typename Dest::Inputs>>{});
 
                 // GC:
                 if constexpr (!std::is_same_v<Plan, NoPlan>) {

@@ -28,12 +28,14 @@ struct CacheTrait : NextT {
 
     Cache cache;
 
-    Cache runPack(typename Next::Inputs args) {
+
+    template <int ...N>
+    Cache runPack(typename Next::Inputs args, std::integer_sequence<int, N...> ids) {
         if (!cache.data.has_value()) {
             if constexpr (TRAIT_LOG) {
                 std::cout << "renewing cache" << std::endl;
             }
-            cache.data = static_cast<Next *>(this)->runPack(args);
+            cache.data = static_cast<Next *>(this)->runPack(args, ids);
         } else {
             if constexpr (TRAIT_LOG) {
                 std::cout << "using cached" << std::endl;
@@ -43,6 +45,7 @@ struct CacheTrait : NextT {
 
         return cache;
     }
+
 
     void gc() {
         cache.data = {};
@@ -68,14 +71,16 @@ struct AsyncTrait : NextT {
 
     using Output = Future;
 
-
-    Future runPack(typename Next::Inputs args) {
+    template <int ...N>
+    Future runPack(typename Next::Inputs args, std::integer_sequence<int, N...> ids) {
         if constexpr (TRAIT_LOG) {
             std::cout << "running async" << std::endl;
         }
-        auto task = Future{
+        auto task = Future {
                 .data = std::async(std::launch::async,
-                                   &Next::runPack, static_cast<Next *>(this), args)};
+                                   &Next::template runPack<N...>,
+                                           static_cast<Next *>(this), args, ids)
+        };
 
         return task;
     }

@@ -15,8 +15,8 @@ public:
 
     Summer(): Node<Summer, int, int, int>("summer") {}
 private:
-    int runImpl(std::tuple<int, int> args) {
-        return std::get<0>(args) + std::get<1>(args);
+    int runImpl(int arg0, int arg1) {
+        return arg0 + arg1;
     }
 };
 
@@ -28,8 +28,8 @@ class Mul2 : public Node<Mul2, int, int> {
 public:
     Mul2(): Node<Mul2, int, int>("mul2") {}
 private:
-    int runImpl(std::tuple<int> args) {
-        return std::get<0>(args) * 2;
+    int runImpl(int arg) {
+        return arg * 2;
     }
 };
 
@@ -40,8 +40,8 @@ public:
 
     Stringify(): Node<Stringify, std::string, int>("stringify") {}
 private:
-    std::string runImpl(std::tuple<int> args) {
-        return std::to_string(std::get<0>(args));
+    std::string runImpl(int arg) {
+        return std::to_string(arg);
     }
 };
 
@@ -51,11 +51,11 @@ class Dummy : public Node<Dummy, std::string, int, std::string> {
 public:
     Dummy(): Node<Dummy, std::string, int, std::string>("dummy") {}
 private:
-    std::string runImpl(std::tuple<int, std::string> args) {
+    std::string runImpl(int arg0, std::string arg1) {
     	std::stringstream os;
-    	os << std::get<0>(args);
+    	os << arg0;
     	os << " ";
-    	os << std::get<1>(args);
+    	os << arg1;
 
         return os.str();
     }

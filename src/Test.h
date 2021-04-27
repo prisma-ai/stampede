@@ -17,9 +17,9 @@ class LongOp1 : public Node<LongOp1, int, int> {
 public:
     LongOp1(): Node<LongOp1, int, int>("LongOp1") {}
 private:
-    int runImpl(std::tuple<int> args) {
+    int runImpl(int args) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        return std::get<0>(args);
+        return args;
     }
 };
 
@@ -31,9 +31,10 @@ class LongOp2 : public Node<LongOp2, int, int> {
 public:
     LongOp2(): Node<LongOp2, int, int>("LongOp2") {}
 private:
-    int runImpl(std::tuple<int> args) {
+
+    int runImpl(int args) {
         std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        return std::get<0>(args);
+        return args;
     }
 };
 
@@ -44,8 +45,9 @@ class Id : public Node<Id, int, int> {
 public:
     Id(): Node<Id, int, int>("Id") {}
 private:
-    int runImpl(std::tuple<int> args) {
-        return std::get<0>(args);
+
+    int runImpl(int arg) {
+        return arg;
     }
 };
 

@@ -22,6 +22,21 @@ using InDegree = BFSLastRecentlyUsedGCPlanImpl<std::tuple<Int<0>>, TestGCEdges>:
 
 int main() {
     {
+        using indexes = std::make_integer_sequence<int, 1>;
+        Id<> id;
+
+        auto o = id.runPack({5}, indexes{});
+        std::cout << o << std::endl;
+
+    }
+
+    {
+        auto g = withNodes<IndexedNode<0, Id<>>>::andEdges<>{};
+        auto o = g.execute<Inputs<0>, 0>({6});
+        std::cout << o << std::endl;
+    }
+
+    {
         std::cout << "func helper test" << std::endl;
 
         using test = std::tuple<int, float>;
@@ -218,7 +233,7 @@ int main() {
         std::cout << "node test" << std::endl;
 
         Summer<> summer;
-        std::cout << value(summer.runPack({1, 2})) << std::endl;
+        std::cout << value(summer.runPack({1, 2}, std::make_integer_sequence<int, 2>{})) << std::endl;
     }
 
     {

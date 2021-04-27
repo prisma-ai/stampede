@@ -27,7 +27,7 @@ class {UserDefined} : public Node<{UserDefined}, {OutputType}, {InputTypesWithCo
 public:
     {UserDefined}(): Node<{UserDefined}, {OutputType}, {InputTypesWithComma}>("{user_defined}") {}
 private:
-    {OutputType} runImpl(std::tuple<{InputTypesWithComma}> args) {
+    {OutputType} runImpl({InputTypesWithComma} args...) {
       ...
     }
 };
@@ -45,8 +45,8 @@ class Id : public Node<Sum, int, int> {
 public:
     Id(): Node<Id, int, int>("id") {}
 private:
-    int runImpl(std::tuple<int> args) {
-        return std::get<0>(args);
+    int runImpl(int arg) {
+        return arg;
     }
 };
 
@@ -58,8 +58,8 @@ class Sum : public Node<Sum, int, int, int> {
 public:
     Summer(): Node<Summer, int, int, int>("sum") {}
 private:
-    int runImpl(std::tuple<int, int> args) {
-        return std::get<0>(args) + std::get<1>(args);
+    int runImpl(int arg0, int arg1) {
+        return arg0 + arg1;
     }
 };
 
@@ -70,8 +70,8 @@ class Heavy_0 : public Heavy_0<Heavy_0, int, int> {
 public:
     Heavy_0(): Node<Heavy_0, int, int>("Heavy_0") {}
 private:
-    int runImpl(std::tuple<int> args) {
-        return someHeavyOperation(std::get<0>(args));
+    int runImpl(int arg) {
+        return someHeavyOperation(arg);
     }
 };
 
@@ -82,8 +82,8 @@ class Heavy_1 : public Heavy_1<Heavy_1, int, int> {
 public:
     Heavy_1(): Node<Heavy_1, int, int>("Heavy_1") {}
 private:
-    int runImpl(std::tuple<int> args) {
-        return anotherHeavyOperation(std::get<0>(args));
+    int runImpl(int arg) {
+        return anotherHeavyOperation(arg);
     }
 };
 ```
@@ -110,7 +110,7 @@ In example we assigning:
 #define NODES IndexedNode <0, Id<>> , IndexedNode <1, AsyncHeavy_0<>>, IndexedNode <2, AsyncHeavy_1<>>, IndexedNode <3, Sum<>>
 ```
 
-4. Declare edges that forms ` node_id <- dependecies_ids > `
+4. Declare edges that forms ` node_id <- dependecies_ids `
 
 In example we assuming that:
 * inputs for `Sum<>` (id `3`) is `AsyncHeavy_0<>` (id `1`) and `AsyncHeavy_1<>` (id `2`)
@@ -130,7 +130,7 @@ If you need clear intermediate data (such as a cache) as soon as possible (then 
 ```
 
 
-5. Run computations
+6. Run computations
 
 In example we're assuming that `Id<>` (id `0`) will be source, `Sum<>` (id `3`) will be target node
 ```
