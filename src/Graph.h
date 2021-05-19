@@ -43,7 +43,7 @@ auto value(Output output) {
     }
 }
 
-template<template<typename...> typename Impl, typename OutputT, typename ...InputsT>
+template<typename Impl, typename OutputT, typename ...InputsT>
 struct Node {
     using Output = OutputT;
     using Inputs = std::tuple<InputsT...>;
@@ -68,7 +68,7 @@ struct Node {
         if constexpr (BASE_GRAPH_CALLS_LOG) {
             std::cout << tag_ << " executed" << std::endl;
         }
-        return static_cast<Impl<OutputT, InputsT...> *>(this)->runImpl(std::get<N>(args)...);
+        return static_cast<Impl *>(this)->runImpl(std::get<N>(args)...);
     }
 
 

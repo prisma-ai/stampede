@@ -7,7 +7,6 @@
 #include <optional>
 
 
-template <typename...>
 class Summer : public Node<Summer, int, int, int> {
     friend class Node;
 
@@ -21,7 +20,6 @@ private:
 };
 
 
-template <typename...>
 class Mul2 : public Node<Mul2, int, int> {
     friend class Node;
 
@@ -33,7 +31,6 @@ private:
     }
 };
 
-template <typename...>
 class Stringify : public Node<Stringify, std::string, int> {
     friend class Node;
 public:
@@ -45,7 +42,6 @@ private:
     }
 };
 
-template <typename...>
 class Dummy : public Node<Dummy, std::string, int, std::string> {
     friend class Node;
 public:

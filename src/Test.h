@@ -11,7 +11,6 @@
 #include <optional>
 
 
-template <typename...>
 class LongOp1 : public Node<LongOp1, int, int> {
     friend class Node;
 public:
@@ -24,7 +23,6 @@ private:
 };
 
 
-template <typename...>
 class LongOp2 : public Node<LongOp2, int, int> {
     friend class Node;
 
@@ -38,7 +36,6 @@ private:
     }
 };
 
-template <typename...>
 class Id : public Node<Id, int, int> {
     friend class Node;
 
@@ -52,22 +49,22 @@ private:
 };
 
 
-#define TestSyncNodes IndexedNode<0, Id<>>, IndexedNode<1, LongOp1<>>, IndexedNode<2, LongOp2<>>, IndexedNode<3, Summer<>>
+#define TestSyncNodes IndexedNode<0, Id>, IndexedNode<1, LongOp1>, IndexedNode<2, LongOp2>, IndexedNode<3, Summer>
 #define TestSyncEdges Edge<3, std::tuple<Int<2>, Int<1>>>, Edge<1, std::tuple<Int<0>>>, Edge<2, std::tuple<Int<0>>>
 
 
-#define TestAsyncNodes IndexedNode<0, Id<>>, IndexedNode<1, AsyncTrait<LongOp1<>>>, IndexedNode<2, AsyncTrait<LongOp2<>>>, IndexedNode<3, Summer<>>
+#define TestAsyncNodes IndexedNode<0, Id>, IndexedNode<1, AsyncTrait<LongOp1>>, IndexedNode<2, AsyncTrait<LongOp2>>, IndexedNode<3, Summer>
 #define TestAsyncEdges Edge<3, std::tuple<Int<2>, Int<1>>>, Edge<1, std::tuple<Int<0>>>, Edge<2, std::tuple<Int<0>>>
 
 
-#define TestNoCacheNodes IndexedNode<0, LongOp1<>>, IndexedNode<1, Summer<>>
+#define TestNoCacheNodes IndexedNode<0, LongOp1>, IndexedNode<1, Summer>
 #define TestNoCacheEdges Edge<1, std::tuple<Int<0>, Int<0>>>
 
-#define TestCacheNodes IndexedNode<0, CacheTrait<LongOp1<>>>, IndexedNode<1, Summer<>>
+#define TestCacheNodes IndexedNode<0, CacheTrait<LongOp1>>, IndexedNode<1, Summer>
 #define TestCacheEdges Edge<1, Deps<0, 1>>
 
 
-#define TestGCNodes IndexedNode<0, Id<> >, IndexedNode<1, LongOp1<> >, IndexedNode<2, Summer<> >
+#define TestGCNodes IndexedNode<0, Id >, IndexedNode<1, LongOp1 >, IndexedNode<2, Summer >
 #define TestGCEdges Edge<2, std::tuple<  Int<0>, Int<1>  >  >, Edge<1, std::tuple<  Int<0>  >  >
 
 
