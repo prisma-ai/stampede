@@ -23,7 +23,7 @@ using InDegree = BFSLastRecentlyUsedGCPlanImpl<std::tuple<Int<0>>, TestGCEdges>:
 int main() {
     {
         using indexes = std::make_integer_sequence<int, 1>;
-        Id<> id;
+        Id id;
 
         auto o = id.runPack({5}, indexes{});
         std::cout << o << std::endl;
@@ -31,7 +31,7 @@ int main() {
     }
 
     {
-        auto g = withNodes<IndexedNode<0, Id<>>>::andEdges<>{};
+        auto g = withNodes<IndexedNode<0, Id>>::andEdges{};
         auto o = g.execute<Inputs<0>, 0>({6});
         std::cout << o << std::endl;
     }
@@ -232,7 +232,7 @@ int main() {
     {
         std::cout << "node test" << std::endl;
 
-        Summer<> summer;
+        Summer summer;
         std::cout << value(summer.runPack({1, 2}, std::make_integer_sequence<int, 2>{})) << std::endl;
     }
 
@@ -240,9 +240,9 @@ int main() {
         std::cout << "multiple input test" << std::endl;
 
         auto output = withNodes<
-                IndexedNode<0, Id<>>,
-                IndexedNode<1, Id<>>,
-                IndexedNode<2, Summer<>>
+                IndexedNode<0, Id>,
+                IndexedNode<1, Id>,
+                IndexedNode<2, Summer>
             >::andEdges<
                 Edge<2, std::tuple<
                             Int<0>,
@@ -260,10 +260,10 @@ int main() {
 
         auto output =
                 withNodes<
-                        IndexedNode<0, AsyncTrait<CacheTrait<Summer<>>>>,
-                        IndexedNode<1, Stringify<>>,
-                        IndexedNode<2, AsyncTrait<Mul2<>>>,
-                        IndexedNode<3, Dummy<>>>
+                        IndexedNode<0, AsyncTrait<CacheTrait<Summer>>>,
+                        IndexedNode<1, Stringify>,
+                        IndexedNode<2, AsyncTrait<Mul2>>,
+                        IndexedNode<3, Dummy>>
                 ::andEdges<
                         Edge<3, std::tuple<Int<2>, Int<1>>>,
                         Edge<1, std::tuple<Int<0>> >,
