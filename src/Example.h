@@ -6,61 +6,56 @@
 #include <sstream>
 #include <optional>
 
-
 class Summer : public Node<Summer, int, int, int> {
-    friend class Node;
+  friend class Node;
 
-public:
+ public:
 
-    Summer(): Node<Summer, int, int, int>("summer") {}
-private:
-    int runImpl(int arg0, int arg1) {
-        return arg0 + arg1;
-    }
+  Summer() : Node<Summer, int, int, int>("summer") {}
+ private:
+  int runImpl(int arg0, int arg1) {
+    return arg0 + arg1;
+  }
 };
 
-
 class Mul2 : public Node<Mul2, int, int> {
-    friend class Node;
+  friend class Node;
 
-public:
-    Mul2(): Node<Mul2, int, int>("mul2") {}
-private:
-    int runImpl(int arg) {
-        return arg * 2;
-    }
+ public:
+  Mul2() : Node<Mul2, int, int>("mul2") {}
+ private:
+  int runImpl(int arg) {
+    return arg * 2;
+  }
 };
 
 class Stringify : public Node<Stringify, std::string, int> {
-    friend class Node;
-public:
+  friend class Node;
+ public:
 
-    Stringify(): Node<Stringify, std::string, int>("stringify") {}
-private:
-    std::string runImpl(int arg) {
-        return std::to_string(arg);
-    }
+  Stringify() : Node<Stringify, std::string, int>("stringify") {}
+ private:
+  std::string runImpl(int arg) {
+    return std::to_string(arg);
+  }
 };
 
 class Dummy : public Node<Dummy, std::string, int, std::string> {
-    friend class Node;
-public:
-    Dummy(): Node<Dummy, std::string, int, std::string>("dummy") {}
-private:
-    std::string runImpl(int arg0, std::string arg1) {
-    	std::stringstream os;
-    	os << arg0;
-    	os << " ";
-    	os << arg1;
+  friend class Node;
+ public:
+  Dummy() : Node<Dummy, std::string, int, std::string>("dummy") {}
+ private:
+  std::string runImpl(int arg0, std::string arg1) {
+    std::stringstream os;
+    os << arg0;
+    os << " ";
+    os << arg1;
 
-        return os.str();
-    }
+    return os.str();
+  }
 };
-
-
 
 #define ExampleNodes IndexedNode<0, Summer<>>, IndexedNode<1, Stringify<>>, IndexedNode<2, Mul2<>>, IndexedNode<3, Dummy<>>
 #define ExampleEdges Edge<3, std::tuple<IntType<2>, IntType<1>>>, Edge<1, std::tuple<IntType<0>>>, Edge<2, std::tuple<IntType<0>>>
-
 
 #endif

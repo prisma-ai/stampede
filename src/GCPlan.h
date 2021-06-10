@@ -7,7 +7,6 @@
 
 #include "BFSLastRecentlyUsedGCPlan.h"
 
-struct NoPlan { };
-
+struct NoPlan {};
 
 #endif //GRAPH_PROC_GCPLAN_H
