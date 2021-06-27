@@ -51,6 +51,10 @@ class Id : public Node<Id, int, int> {
 #define TestAsyncNodes IndexedNode<0, Id>, IndexedNode<1, AsyncTrait<LongOp1>>, IndexedNode<2, AsyncTrait<LongOp2>>, IndexedNode<3, Summer>
 #define TestAsyncEdges Edge<3, std::tuple<Int<2>, Int<1>>>, Edge<1, std::tuple<Int<0>>>, Edge<2, std::tuple<Int<0>>>
 
+#define TestAsyncPoolNodes IndexedNode<0, Id>, IndexedNode<1, AsyncPoolTrait<LongOp1>>, IndexedNode<2, AsyncPoolTrait<LongOp2>>, IndexedNode<3, Summer>
+#define TestAsyncPoolEdges Edge<3, std::tuple<Int<2>, Int<1>>>, Edge<1, std::tuple<Int<0>>>, Edge<2, std::tuple<Int<0>>>
+
+
 #define TestNoCacheNodes IndexedNode<0, LongOp1>, IndexedNode<1, Summer>
 #define TestNoCacheEdges Edge<1, std::tuple<Int<0>, Int<0>>>
 

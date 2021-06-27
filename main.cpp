@@ -8,6 +8,7 @@
 #include "src/Executor.h"
 #include "src/BFSLastRecentlyUsedGCPlan.h"
 #include "src/Compose.h"
+#include "src/async/Pool.h"
 
 template<typename V>
 struct testPred {
@@ -19,6 +20,46 @@ template<typename NodeId, typename InDegreeCount>
 using InDegree = BFSLastRecentlyUsedGCPlanImpl<std::tuple<Int<0>>, TestGCEdges >::InDegree<NodeId, InDegreeCount>;
 
 int main() {
+  {
+    auto pool = Pool<>(4);
+    int test = 7;
+
+    std::function<int(void)> f = [&test]() {
+      std::cout << "start async section" << std::endl;
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      std::cout << "end async section" << std::endl;
+
+      return test;
+    };
+
+    auto future = pool.enqueue(f);
+    future.wait();
+    std::cout << "pool test " << future.get() << std::endl;
+  }
+
+  {
+    auto t0 = std::chrono::system_clock::now();
+
+    auto pool = std::make_shared<Pool<>>(4);
+
+    auto graph = withNodes<TestAsyncPoolNodes >::andEdges<TestAsyncPoolEdges >{};
+    auto context = graph.createContext();
+    context.nodePtr<1>()->pool(pool);
+    context.nodePtr<2>()->pool(pool);
+
+
+    auto output = graph.topDown<std::tuple<Int<0>>, 3>(context, {{4}});
+
+    auto t1 = std::chrono::system_clock::now();
+
+    std::cout << "async pool test " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+              << std::endl;
+
+    pool.reset();
+  }
+
+
+
   {
     using indexes = std::make_integer_sequence<int, 1>;
     Id id;
@@ -319,7 +360,10 @@ int main() {
 
     auto executor = withNodes<TestCacheNodes >::andEdges<TestCacheEdges>{};
     auto context = executor.createContext();
-    static_cast<CacheTraitBase*>(&std::get<0>(context.allNodes))->keep = []() { return false; };
+
+//    static_cast<CacheTraitBase*>(&std::get<0>(context.allNodes))->keep = []() { return false; };
+    context.nodePtr<0>()->keep = []() { return false; };
+
 
     auto output = executor.topDown<std::tuple<Int<0>>, 1>(context, {{4}});
 
@@ -328,6 +372,7 @@ int main() {
     std::cout << "cache drop test " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
               << std::endl;
   }
+
 
   return 0;
 }

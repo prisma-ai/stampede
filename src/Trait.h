@@ -8,6 +8,7 @@
 #include <future>
 #include <optional>
 #include <iostream>
+#include "async/Pool.h"
 
 constexpr static auto TRAIT_LOG = false;
 
@@ -62,6 +63,55 @@ struct CacheTrait : CacheTraitBase, NextT {
     }
   }
 };
+
+struct AsyncPoolBase {
+ public:
+  void pool(std::shared_ptr<PoolBase> pool) {
+    pool_ = pool;
+  }
+
+ protected:
+  std::shared_ptr<PoolBase> pool_;
+
+};
+
+template<typename NextT>
+struct AsyncPoolTrait : AsyncPoolBase, NextT {
+  using Next = NextT;
+
+  struct Future {
+    std::shared_future<typename Next::Output> data;
+
+    typename Next::Output value() {
+      return data.get();
+    }
+  };
+
+
+  using Output = Future;
+
+  template<int ...N>
+  Future runPack(typename Next::Inputs args, std::integer_sequence<int, N...> ids) {
+    if constexpr (TRAIT_LOG) {
+      std::cout << "running async" << std::endl;
+    }
+
+    auto task = Future{
+        .data = pool_->enqueue<typename Next::Output>([&args, &ids, this]() {
+          return static_cast<Next *>(this)->runPack(args, ids);
+        })
+    };
+
+    return task;
+  }
+
+  void gc() {
+    static_cast<Next *>(this)->gc();
+  }
+
+
+};
+
 
 template<typename NextT>
 struct AsyncTrait : NextT {

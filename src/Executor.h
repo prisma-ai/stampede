@@ -13,6 +13,11 @@ template<typename...Nodes>
 struct Context {
   using AllNodes = std::tuple<typename Nodes::type...>;
   AllNodes allNodes{};
+
+  template<int Idx, typename TraitBaseType = std::tuple_element_t<Idx, AllNodes>>
+  TraitBaseType* nodePtr() {
+    return static_cast<TraitBaseType*>(&std::get<Idx>(allNodes));
+  }
 };
 
 // effectfull map
