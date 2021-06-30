@@ -49,7 +49,7 @@ class PoolBase {
 template<typename ThreadHooks = DefaultThreadHooks>
 class Pool : ThreadHooks, public PoolBase {
  public:
-  Pool(int N) {
+  void start(int N) {
     for(auto i = 0; i < N; ++i) {
 
       pool_.emplace_back([this]() {

@@ -43,7 +43,7 @@ struct Node {
   using Output = OutputT;
   using Inputs = std::tuple<InputsT...>;
 
-  explicit Node(const std::string &tag) {
+  explicit Node(const std::string &tag = "node") {
     tag_ = tag;
     if constexpr (BASE_GRAPH_CALLS_LOG) {
       std::cout << tag_ << " created" << std::endl;

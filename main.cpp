@@ -21,7 +21,8 @@ using InDegree = BFSLastRecentlyUsedGCPlanImpl<std::tuple<Int<0>>, TestGCEdges >
 
 int main() {
   {
-    auto pool = Pool<>(4);
+    auto pool = Pool<>();
+    pool.start(4);
     int test = 7;
 
     std::function<int(void)> f = [&test]() {
@@ -40,7 +41,8 @@ int main() {
   {
     auto t0 = std::chrono::system_clock::now();
 
-    auto pool = std::make_shared<Pool<>>(4);
+    auto pool = std::make_shared<Pool<>>();
+    pool->start(4);
 
     auto graph = withNodes<TestAsyncPoolNodes >::andEdges<TestAsyncPoolEdges >{};
     auto context = graph.createContext();

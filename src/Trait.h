@@ -97,7 +97,7 @@ struct AsyncPoolTrait : AsyncPoolBase, NextT {
     }
 
     auto task = Future{
-        .data = pool_->enqueue<typename Next::Output>([&args, &ids, this]() {
+        .data = pool_->enqueue<typename Next::Output>([args, ids, this]() {
           return static_cast<Next *>(this)->runPack(args, ids);
         })
     };
