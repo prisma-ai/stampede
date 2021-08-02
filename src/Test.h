@@ -5,9 +5,11 @@
 #ifndef GRAPH_PROC_TEST_H
 #define GRAPH_PROC_TEST_H
 
-#include "Graph.h"
+#include "spd/Graph.h"
 #include <sstream>
 #include <optional>
+
+namespace spd {
 
 class LongOp1 : public Node<LongOp1, int, int> {
   friend class Node;
@@ -45,6 +47,8 @@ class Id : public Node<Id, int, int> {
   }
 };
 
+}
+
 #define TestSyncNodes IndexedNode<0, Id>, IndexedNode<1, LongOp1>, IndexedNode<2, LongOp2>, IndexedNode<3, Summer>
 #define TestSyncEdges Edge<3, std::tuple<Int<2>, Int<1>>>, Edge<1, std::tuple<Int<0>>>, Edge<2, std::tuple<Int<0>>>
 
@@ -54,7 +58,6 @@ class Id : public Node<Id, int, int> {
 #define TestAsyncPoolNodes IndexedNode<0, Id>, IndexedNode<1, AsyncPoolTrait<LongOp1>>, IndexedNode<2, AsyncPoolTrait<LongOp2>>, IndexedNode<3, Summer>
 #define TestAsyncPoolEdges Edge<3, std::tuple<Int<2>, Int<1>>>, Edge<1, std::tuple<Int<0>>>, Edge<2, std::tuple<Int<0>>>
 
-
 #define TestNoCacheNodes IndexedNode<0, LongOp1>, IndexedNode<1, Summer>
 #define TestNoCacheEdges Edge<1, std::tuple<Int<0>, Int<0>>>
 
@@ -63,5 +66,6 @@ class Id : public Node<Id, int, int> {
 
 #define TestGCNodes IndexedNode<0, Id >, IndexedNode<1, LongOp1 >, IndexedNode<2, Summer >
 #define TestGCEdges Edge<2, std::tuple<  Int<0>, Int<1>  >  >, Edge<1, std::tuple<  Int<0>  >  >
+
 
 #endif //GRAPH_PROC_TEST_H

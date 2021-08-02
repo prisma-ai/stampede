@@ -10,6 +10,8 @@
 #include <iostream>
 #include "async/Pool.h"
 
+namespace spd {
+
 constexpr static auto TRAIT_LOG = false;
 
 struct CacheTraitBase {
@@ -87,7 +89,6 @@ struct AsyncPoolTrait : AsyncPoolBase, NextT {
     }
   };
 
-
   using Output = Future;
 
   template<int ...N>
@@ -109,9 +110,7 @@ struct AsyncPoolTrait : AsyncPoolBase, NextT {
     static_cast<Next *>(this)->gc();
   }
 
-
 };
-
 
 template<typename NextT>
 struct AsyncTrait : NextT {
@@ -145,5 +144,7 @@ struct AsyncTrait : NextT {
     static_cast<Next *>(this)->gc();
   }
 };
+
+}
 
 #endif //GRAPH_PROC_TRAIT_H

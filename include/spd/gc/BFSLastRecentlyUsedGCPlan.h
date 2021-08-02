@@ -5,8 +5,10 @@
 #ifndef GRAPH_PROC_BFSLASTRECENTLYUSEDGCPLAN_H
 #define GRAPH_PROC_BFSLASTRECENTLYUSEDGCPLAN_H
 
-#include "Traversal.h"
-#include "FuncHelper.h"
+#include "spd/util/Traversal.h"
+#include "spd/util/FuncHelper.h"
+
+namespace spd {
 
 struct BFSLastRecentlyUsedGCPlan {};
 
@@ -30,15 +32,15 @@ struct BFSLastRecentlyUsedGCPlanImpl {
 
 
   using InDegrees = std::tuple<
-      InDegree<Int<Edges::source>, Int<std::tuple_size_v<typename Edges::ids>>>...
+      InDegree<Int < Edges::source>, Int < std::tuple_size_v<typename Edges::ids>>>...
   >;
 
   template<int source, typename ID>
   struct FindAndDecrease {
     using type = std::conditional_t<
         source == ID::nodeid_v,
-        InDegree<typename ID::nodeid_t, Int<ID::count_v - 1>>,
-        ID>;
+        InDegree<typename ID::nodeid_t, Int < ID::count_v - 1>>,
+    ID>;
   };
 
   template<typename NewIndegrees, typename PrereqsTuple>
@@ -115,7 +117,7 @@ struct BFSLastRecentlyUsedGCPlanImpl {
 
   template<typename Path, typename InDegreesInfo, typename IQHead, typename ...IQTail>
   struct Kahns<Path, InDegreesInfo, std::tuple<IQHead, IQTail...>> {
-    using path = typename concat<Path>::template with<std::tuple<Int<IQHead::value>>>::type;
+    using path = typename concat<Path>::template with<std::tuple<Int < IQHead::value>>>::type;
     using neighbours = typename PrerequisitesForTuple<IQHead::value, Transposed>::type;
 
     using newInDegrees = typename DecreaseInDegrees<InDegreesInfo, neighbours>::type;
@@ -154,12 +156,12 @@ struct BFSLastRecentlyUsedGCPlanImpl {
 
     using id = std::conditional_t<
         V == PHead::value,
-        Int<V>,
-        std::conditional_t<
-            nodeContainsVAsPrereq,
-            PHead,
-            typename lastUsedNode<V, std::tuple<PTail...>>::id
-        >
+        Int < V>,
+    std::conditional_t<
+        nodeContainsVAsPrereq,
+        PHead,
+        typename lastUsedNode<V, std::tuple<PTail...>>::id
+    >
     >;
   };
 
@@ -177,7 +179,7 @@ struct BFSLastRecentlyUsedGCPlanImpl {
   template<typename RPath, typename PHead, typename ...PTail>
   struct GCMap<RPath, std::tuple<PHead, PTail...>> {
     using lastUsed = typename lastUsedNode<PHead::value, RPath>::id;
-    using newMap = std::tuple<lastUsed, Int<PHead::value>>;
+    using newMap = std::tuple<lastUsed, Int < PHead::value>>;
     using tail = typename GCMap<RPath, std::tuple<PTail...>>::type;
     using type = typename concat<std::tuple<newMap>>::template with<tail>::type;
   };
@@ -195,5 +197,7 @@ using PlanLast = std::tuple_element_t<0, PlanItem>;
 
 template<typename PlanItem>
 using PlanDep = std::tuple_element_t<1, PlanItem>;
+
+}
 
 #endif //GRAPH_PROC_BFSLASTRECENTLYUSEDGCPLAN_H

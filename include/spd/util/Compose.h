@@ -5,6 +5,8 @@
 #ifndef GRAPH_PROC_COMPOSE_H
 #define GRAPH_PROC_COMPOSE_H
 
+namespace spd {
+
 struct Nil {};
 
 template<typename Base, template<typename> class ...Types>
@@ -23,5 +25,7 @@ struct Compose<Base> {
 
 template<typename Base, template<typename> class ...Types>
 using Apply = typename Compose<Base, Types...>::type;
+
+}
 
 #endif //GRAPH_PROC_COMPOSE_H

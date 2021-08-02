@@ -7,6 +7,8 @@
 
 #include <tuple>
 
+namespace spd {
+
 template<typename Element, typename Tuple>
 struct append;
 
@@ -102,5 +104,7 @@ template<>
 struct reverse<std::tuple<>> {
   using type = std::tuple<>;
 };
+
+}
 
 #endif //GRAPH_PROC_FUNCHELPER_H

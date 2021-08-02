@@ -6,8 +6,10 @@
 #define GRAPH_PROC_EXECUTOR_H
 
 #include "Graph.h"
-#include "Traversal.h"
-#include "GCPlan.h"
+#include "spd/util/Traversal.h"
+#include "spd/gc/GCPlan.h"
+
+namespace spd {
 
 template<typename...Nodes>
 struct Context {
@@ -15,12 +17,12 @@ struct Context {
   AllNodes allNodes{};
 
   template<int Idx, typename TraitBaseType = std::tuple_element_t<Idx, AllNodes>>
-  TraitBaseType* nodePtr() {
-    return static_cast<TraitBaseType*>(&std::get<Idx>(allNodes));
+  TraitBaseType *nodePtr() {
+    return static_cast<TraitBaseType *>(&std::get<Idx>(allNodes));
   }
 };
 
-// effectfull map
+// effectful map
 template<typename Plan, typename Applier, typename Input, typename Output, typename Ids>
 struct SequenceMap {
 
@@ -32,7 +34,7 @@ struct SequenceMap {
   }
 };
 
-// effectfull map
+// effectful map
 template<int id, typename Plan>
 struct planApplier;
 
@@ -105,13 +107,10 @@ struct withNodes {
 
 
       auto dest = &std::get<DestId>(context.allNodes);
-//            auto dest = Dest{};
-
 
       using sourceInDest = typename FindInputPosition<DestId, 0, SourcesIds>::type;
 
       if constexpr(!std::is_same_v<sourceInDest, NotFound>) {
-//
         using indexes = std::make_integer_sequence<int, std::tuple_size_v<
             std::tuple_element_t<sourceInDest::value, typename ArgsPackFor<SourcesIds, Nodes...>::type>
         >>;
@@ -163,5 +162,7 @@ struct withNodes {
 
   };
 };
+
+}
 
 #endif //GRAPH_PROC_EXECUTOR_H

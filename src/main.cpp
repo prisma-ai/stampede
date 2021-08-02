@@ -1,14 +1,16 @@
 #include <iostream>
 
-#include "src/Graph.h"
-#include "src/Example.h"
-#include "src/Test.h"
-#include "src/Trait.h"
-#include "src/Traversal.h"
-#include "src/Executor.h"
-#include "src/BFSLastRecentlyUsedGCPlan.h"
-#include "src/Compose.h"
-#include "src/async/Pool.h"
+#include <spd/Graph.h>
+#include "Example.h"
+#include "Test.h"
+#include <spd/Trait.h>
+#include <spd/util/Traversal.h>
+#include <spd/Executor.h>
+#include <spd/gc/BFSLastRecentlyUsedGCPlan.h>
+#include <spd/util/Compose.h>
+#include <spd/async/Pool.h>
+
+using namespace spd;
 
 template<typename V>
 struct testPred {

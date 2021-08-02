@@ -6,8 +6,10 @@
 #define GRAPH_PROC_TRAVERSAL_H
 
 #include <tuple>
-#include "Graph.h"
-#include "FuncHelper.h"
+#include "spd/Graph.h"
+#include "spd/util/FuncHelper.h"
+
+namespace spd {
 
 struct Endl {};
 
@@ -125,5 +127,7 @@ struct transpose<std::tuple<HEdge, TEdges...>> {
   using type = typename inner<std::tuple<>, HEdge>::type;
 
 };
+
+}
 
 #endif //GRAPH_PROC_TRAVERSAL_H

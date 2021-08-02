@@ -10,10 +10,12 @@
 #include <iostream>
 #include <experimental/type_traits>
 #include <future>
-#include "FuncHelper.h"
-#include "Compose.h"
+#include "spd/util/FuncHelper.h"
+#include "spd/util/Compose.h"
 
 #define declare_node(name, id, function_body)
+
+namespace spd {
 
 constexpr static auto BASE_GRAPH_CALLS_LOG = false;
 
@@ -192,6 +194,8 @@ using Deps = std::tuple<Int<Ids>...>;
 
 template<int...Ids>
 using Inputs = Deps<Ids...>;
+
+}
 
 #endif //GRAPH_PROC_GRAPH_H
 

@@ -1,10 +1,12 @@
 #ifndef GRAPH_PROC_EXAMPLE_H
 #define GRAPH_PROC_EXAMPLE_H
 
-#include "Graph.h"
+#include "spd/Graph.h"
 #include <string>
 #include <sstream>
 #include <optional>
+
+namespace spd {
 
 class Summer : public Node<Summer, int, int, int> {
   friend class Node;
@@ -54,6 +56,8 @@ class Dummy : public Node<Dummy, std::string, int, std::string> {
     return os.str();
   }
 };
+
+}
 
 #define ExampleNodes IndexedNode<0, Summer<>>, IndexedNode<1, Stringify<>>, IndexedNode<2, Mul2<>>, IndexedNode<3, Dummy<>>
 #define ExampleEdges Edge<3, std::tuple<IntType<2>, IntType<1>>>, Edge<1, std::tuple<IntType<0>>>, Edge<2, std::tuple<IntType<0>>>
