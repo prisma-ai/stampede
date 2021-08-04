@@ -14,28 +14,39 @@ namespace spd {
 
 constexpr static auto TRAIT_LOG = false;
 
+template <typename NextT>
+struct TraitBase : NextT {
+  void gc() {
+    static_cast<NextT *>(this)->gc();
+  }
+
+};
+
+
+template<typename T>
+struct Cache {
+  std::optional<T> data;
+  bool dirty;
+
+  T value() {
+    return data.value();
+  }
+};
+
 struct CacheTraitBase {
   std::function<bool()> keep = []() { return true; };
 };
 
 template<typename NextT>
-struct CacheTrait : CacheTraitBase, NextT {
+struct CacheTrait : CacheTraitBase, TraitBase<NextT> {
   using Next = NextT;
 
-  struct Cache {
-    std::optional<typename Next::Output> data;
+  using Output = Cache<typename Next::Output>;
 
-    typename Next::Output value() {
-      return data.value();
-    }
-  };
-
-  using Output = Cache;
-
-  Cache cache;
+  Output cache;
 
   template<int ...N>
-  Cache runPack(typename Next::Inputs args, std::integer_sequence<int, N...> ids) {
+  Output runPack(typename Next::Inputs args, std::integer_sequence<int, N...> ids) {
     // no cache -- recompute
     // cache and no keep -- recompute
     if (!cache.data.has_value()) {
@@ -43,10 +54,13 @@ struct CacheTrait : CacheTraitBase, NextT {
         std::cout << "renewing cache" << std::endl;
       }
       cache.data = static_cast<Next *>(this)->runPack(args, ids);
+      cache.dirty = true;
+
     } else {
       if (!static_cast<CacheTraitBase *>(this)->keep()) {
         cache.data = {};
         cache.data = static_cast<Next *>(this)->runPack(args, ids);
+        cache.dirty = true;
       }
       if constexpr (TRAIT_LOG) {
         std::cout << "using cached" << std::endl;
@@ -58,18 +72,61 @@ struct CacheTrait : CacheTraitBase, NextT {
 
   void gc() {
     cache.data = {};
+    cache.dirty = true;
+
     static_cast<Next *>(this)->gc();
 
     if constexpr (TRAIT_LOG) {
       std::cout << "cache gced" << std::endl;
     }
   }
+
+
+  template<typename T>
+  struct hasCachePredicate {
+    constexpr static auto value = has_cache<T>;
+  };
+
+
+
+  template<typename TraitedInputsT>
+  Output sequencePoint(TraitedInputsT args) {
+    using allHasCache = typename all<hasCachePredicate, TraitedInputsT>::type;
+    if constexpr(allHasCache::value) {
+
+
+      auto anyDirty = std::apply([](auto ...x) -> bool {  return (... || x.cache.dirty); }, args);
+      if(anyDirty) {
+        auto values = std::apply(
+            [](auto ...x) -> typename Next::Inputs { return std::make_tuple(value(x)...); }, args);
+        return runPack(values, std::make_integer_sequence<int, std::tuple_size_v<TraitedInputsT>>{});
+      } else {
+        return cache;
+      }
+
+
+    } else {
+      auto values = std::apply(
+          [](auto ...x) -> typename Next::Inputs { return std::make_tuple(value(x)...); }, args);
+      return runPack(values, std::make_integer_sequence<int, std::tuple_size_v<TraitedInputsT>>{});
+    }
+
+  }
+};
+
+template <typename T>
+struct Future {
+  std::shared_future<T> data;
+
+  T value() {
+    return data.get();
+  }
 };
 
 struct AsyncPoolBase {
  public:
   void pool(std::shared_ptr<PoolBase> pool) {
-    pool_ = pool;
+    pool_ = std::move(pool);
   }
 
  protected:
@@ -78,26 +135,19 @@ struct AsyncPoolBase {
 };
 
 template<typename NextT>
-struct AsyncPoolTrait : AsyncPoolBase, NextT {
+struct AsyncPoolTrait : AsyncPoolBase, TraitBase<NextT> {
   using Next = NextT;
 
-  struct Future {
-    std::shared_future<typename Next::Output> data;
 
-    typename Next::Output value() {
-      return data.get();
-    }
-  };
-
-  using Output = Future;
+  using Output = Future<typename NextT::Output>;
 
   template<int ...N>
-  Future runPack(typename Next::Inputs args, std::integer_sequence<int, N...> ids) {
+  Output runPack(typename Next::Inputs args, std::integer_sequence<int, N...> ids) {
     if constexpr (TRAIT_LOG) {
       std::cout << "running async" << std::endl;
     }
 
-    auto task = Future{
+    auto task = Output {
         .data = pool_->enqueue<typename Next::Output>([args, ids, this]() {
           return static_cast<Next *>(this)->runPack(args, ids);
         })
@@ -106,32 +156,33 @@ struct AsyncPoolTrait : AsyncPoolBase, NextT {
     return task;
   }
 
-  void gc() {
-    static_cast<Next *>(this)->gc();
+
+  template<typename TraitedInputsT>
+  Output sequencePoint(TraitedInputsT args) {
+    auto values = std::apply(
+        [](auto ...x) -> typename Next::Inputs { return std::make_tuple(value(x)...); }, args);
+    return runPack(values, std::make_integer_sequence<int, std::tuple_size_v<TraitedInputsT>>{});
   }
+
+//  void gc() {
+//    static_cast<Next *>(this)->gc();
+//  }
 
 };
 
 template<typename NextT>
-struct AsyncTrait : NextT {
+struct AsyncTrait : TraitBase<NextT> {
   using Next = NextT;
 
-  struct Future {
-    std::shared_future<typename Next::Output> data;
 
-    typename Next::Output value() {
-      return data.get();
-    }
-  };
-
-  using Output = Future;
+  using Output = Future<typename NextT::Output>;
 
   template<int ...N>
-  Future runPack(typename Next::Inputs args, std::integer_sequence<int, N...> ids) {
+  Output runPack(typename Next::Inputs args, std::integer_sequence<int, N...> ids) {
     if constexpr (TRAIT_LOG) {
       std::cout << "running async" << std::endl;
     }
-    auto task = Future{
+    auto task = Output {
         .data = std::async(std::launch::async,
                            &Next::template runPack<N...>,
                            static_cast<Next *>(this), args, ids)
@@ -140,9 +191,17 @@ struct AsyncTrait : NextT {
     return task;
   }
 
-  void gc() {
-    static_cast<Next *>(this)->gc();
+
+  template<typename TraitedInputsT>
+  Output sequencePoint(TraitedInputsT args) {
+    auto values = std::apply(
+        [](auto ...x) -> typename Next::Inputs { return std::make_tuple(value(x)...); }, args);
+    return runPack(values, std::make_integer_sequence<int, std::tuple_size_v<TraitedInputsT>>{});
   }
+
+//  void gc() {
+//    static_cast<Next *>(this)->gc();
+//  }
 };
 
 }

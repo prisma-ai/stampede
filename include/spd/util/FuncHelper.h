@@ -62,6 +62,18 @@ struct reduce<Reduce, Base, std::tuple<Head, Tail...>> {
   using type = typename Reduce<Head, newBuffer>::type;
 };
 
+template<template<typename > typename Predicate, typename Elements>
+struct all {
+  template<typename Element, typename Buffer>
+  struct PredicateWrapper {
+    using type = std::integral_constant<bool, Predicate<Element>::value && Buffer::value>;
+  };
+
+  using type = typename reduce<PredicateWrapper, std::true_type, Elements>::type;
+};
+
+
+
 template<template<typename> typename Predicate, typename Tuple>
 struct filter;
 
