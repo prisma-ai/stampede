@@ -134,15 +134,12 @@ struct withNodes {
             Prerequisites>{}.apply(context, args, indexes);
 
 
-        // overriding seq points via traits?? or nodes?
-        // sequence point (default)
+        // sequence point
+        auto values = std::apply(
+            [](auto ...x) -> typename Dest::Inputs { return std::make_tuple(value(x)...); }, inputsTemp);
 
-//        auto values = std::apply(
-//            [](auto ...x) -> typename Dest::Inputs { return std::make_tuple(value(x)...); }, inputsTemp);
-//
-//        auto output = dest->runPack(values,
-//                                    std::make_integer_sequence<int, std::tuple_size_v<typename Dest::Inputs>>{});
-        auto output = dest->sequencePoint(inputsTemp);
+        auto output = dest->runPack(values,
+                                    std::make_integer_sequence<int, std::tuple_size_v<typename Dest::Inputs>>{});
 
         // GC:
         if constexpr (!std::is_same_v<Plan, NoPlan>) {
