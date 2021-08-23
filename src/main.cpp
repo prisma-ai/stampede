@@ -17,11 +17,81 @@ struct testPred {
   constexpr static auto holds = (V::value == 0);
 };
 
+struct HasCache {
+  bool dirty;
+};
+
+struct HasntCache {
+
+};
+
+template<typename T>
+struct hasCachePredicate {
+  constexpr static auto value = has_cache<T>;
+};
+
 
 template<typename NodeId, typename InDegreeCount>
 using InDegree = BFSLastRecentlyUsedGCPlanImpl<std::tuple<Int<0>>, TestGCEdges >::InDegree<NodeId, InDegreeCount>;
 
 int main() {
+
+
+  {
+
+    auto graph = withNodes<TestCacheNodes >::andEdges<TestCacheEdges>{};
+    auto context = graph.createContext();
+
+    context.nodePtr<0>()->cache.data = 2;
+    context.nodePtr<0>()->cache.dirty = true;
+
+    {
+      auto t0 = std::chrono::system_clock::now();
+
+      auto output = graph.topDown<std::tuple<Int<0>>, 1>(context, {{4}});
+
+      auto t1 = std::chrono::system_clock::now();
+
+      std::cout << "lazy cache test " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+                << std::endl;
+    }
+
+    {
+      auto t0 = std::chrono::system_clock::now();
+
+      auto output = graph.topDown<std::tuple<Int<0>>, 1>(context, {{4}});
+
+
+
+      auto t1 = std::chrono::system_clock::now();
+
+      std::cout << "lazy cache test " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+                << std::endl;
+    }
+  }
+
+  {
+    if constexpr(has_cache<HasCache>) {
+      std::cout << "hasCache passed positive" << std::endl;
+    }
+
+    if constexpr(!has_cache<HasntCache>) {
+      std::cout << "hasCache passed negative" << std::endl;
+    }
+
+    using allCache = typename all<hasCachePredicate, std::tuple<HasCache, HasCache>>::type;
+    using notAllCache = typename all<hasCachePredicate, std::tuple<HasCache, HasntCache>>::type;
+
+    if constexpr(allCache::value) {
+      std::cout << "all hasCache passed positive" << std::endl;
+    }
+
+
+    if constexpr(!notAllCache::value) {
+      std::cout << "all hasCache passed negative" << std::endl;
+    }
+  }
+
   {
     auto pool = Pool<>();
     pool.start(4);
@@ -358,6 +428,7 @@ int main() {
     std::cout << "cache test " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
               << std::endl;
   }
+
 
   {
     auto t0 = std::chrono::system_clock::now();

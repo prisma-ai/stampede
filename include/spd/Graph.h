@@ -26,6 +26,12 @@ template<typename T>
 constexpr bool has_value = std::experimental::is_detected_v<value_t, T>;
 
 template<typename T>
+using cache_t = decltype(std::declval<T &>().dirty);
+
+template<typename T>
+constexpr bool has_cache = std::experimental::is_detected_v<cache_t, T>;
+
+template<typename T>
 using next_t = typename T::Next;
 
 template<typename T>
@@ -70,6 +76,13 @@ struct Node {
     if constexpr (BASE_GRAPH_CALLS_LOG) {
       std::cout << tag_ << " gced" << std::endl;
     }
+  }
+
+  template<typename TraitedInputsT>
+  OutputT sequencePoint(TraitedInputsT args) {
+    auto values = std::apply(
+        [](auto ...x) -> Inputs { return std::make_tuple(value(x)...); }, args);
+    return runPack(values, std::make_integer_sequence<int, std::tuple_size_v<TraitedInputsT>>{});
   }
 
   std::string tag_;
