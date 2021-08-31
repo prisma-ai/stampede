@@ -48,7 +48,7 @@ class PoolBase {
 };
 
 template<typename ThreadHooks = DefaultThreadHooks>
-class Pool : ThreadHooks, public PoolBase {
+class Pool : public ThreadHooks, public PoolBase {
  public:
   void start(int N) {
     for (auto i = 0; i < N; ++i) {
