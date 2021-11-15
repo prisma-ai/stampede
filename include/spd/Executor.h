@@ -11,6 +11,28 @@
 
 namespace spd {
 
+template<typename NodesT, typename Applier, template<typename> typename Condition, int Id, typename TypesT>
+struct BulkApplier;
+
+template<typename NodesT, typename Applier, template<typename> typename Condition, int Id, typename Head, typename ...Tail>
+struct BulkApplier<NodesT, Applier, Condition, Id, std::tuple<Head, Tail...>> {
+  void apply(NodesT nodes) {
+    if constexpr(Condition<std::tuple_element_t<Id, NodesT>>::value) {
+      Applier{}.apply(&std::get<Id>(nodes));
+    }
+
+    BulkApplier<NodesT, Applier, Condition, Id + 1, std::tuple<Tail...>>{}.apply(nodes);
+  }
+};
+
+template<typename NodesT, typename Applier, template<typename> typename Condition, int Id>
+struct BulkApplier<NodesT, Applier, Condition, Id, std::tuple<>> {
+  void apply(NodesT _) {
+
+  }
+};
+
+
 template<typename...Nodes>
 struct Context {
   using AllNodes = std::tuple<typename Nodes::type...>;
@@ -20,7 +42,20 @@ struct Context {
   TraitBaseType *nodePtr() {
     return static_cast<TraitBaseType *>(&std::get<Idx>(allNodes));
   }
+
+
+  template<typename Applier, template<typename> typename Condition>
+  void bulkApply() {
+    BulkApplier<AllNodes, Applier, Condition, 0, AllNodes>{}.apply(allNodes);
+  }
+
 };
+
+
+
+
+
+
 
 // effectful map
 template<typename Plan, typename Applier, typename Input, typename Output, typename Ids>
