@@ -13,9 +13,21 @@
 #include "spd/util/FuncHelper.h"
 #include "spd/util/Compose.h"
 
-#define declare_node(name, id, function_body)
 
 namespace spd {
+
+#define declare_node(name, param, out, ...) \
+class name : public spd::Node<name, param, out, __VA_ARGS__> { \
+  friend class Node;  \
+ public:  \
+  name() : spd::Node<name, param, out, __VA_ARGS__>\
+                                   (#name) {}      \
+ private:                            \
+  out runImpl(__VA_ARGS__);                 \
+                                            \
+};
+
+struct Unit {};
 
 constexpr static auto BASE_GRAPH_CALLS_LOG = false;
 
@@ -24,12 +36,6 @@ using value_t = decltype(std::declval<T &>().value());
 
 template<typename T>
 constexpr bool has_value = std::experimental::is_detected_v<value_t, T>;
-
-template<typename T>
-using cache_t = decltype(std::declval<T &>().dirty);
-
-template<typename T>
-constexpr bool has_cache = std::experimental::is_detected_v<cache_t, T>;
 
 template<typename T>
 using next_t = typename T::Next;
@@ -46,10 +52,16 @@ auto value(Output output) {
   }
 }
 
-template<typename Impl, typename OutputT, typename ...InputsT>
-struct Node {
+template<typename Param>
+struct NodeBase {
+  Param config;
+};
+
+template<typename Impl, typename ParamType, typename OutputT, typename ...InputsT>
+struct Node : NodeBase<ParamType> {
   using Output = OutputT;
   using Inputs = std::tuple<InputsT...>;
+  using Param = ParamType;
 
   explicit Node(const std::string &tag = "node") {
     tag_ = tag;

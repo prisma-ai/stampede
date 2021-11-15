@@ -2,7 +2,6 @@
 
 #include <spd/Graph.h>
 #include "Example.h"
-#include "Test.h"
 #include <spd/Trait.h>
 #include <spd/util/Traversal.h>
 #include <spd/Executor.h>
@@ -34,8 +33,68 @@ struct hasCachePredicate {
 template<typename NodeId, typename InDegreeCount>
 using InDegree = BFSLastRecentlyUsedGCPlanImpl<std::tuple<Int<0>>, TestGCEdges >::InDegree<NodeId, InDegreeCount>;
 
-int main() {
 
+declare_node(TestNode, Unit, int, int)
+int TestNode::runImpl(int arg) {
+  return arg;
+}
+
+int main() {
+  {
+    auto params = std::make_tuple(1, 2);
+    auto otherParams = std::make_tuple(1, 2);
+    std::cout << (params == otherParams) << std::endl;
+  }
+
+  {
+    auto graph = withNodes<
+        IndexedNode<0, ConfigurableCacheTrait<LongOp1>>, IndexedNode<1, Summer>
+    >::andEdges<
+        Edge<1, Deps<0, 0>>
+    >{};
+
+    auto context = graph.createContext();
+
+    {
+      auto t0 = std::chrono::system_clock::now();
+
+      auto output = graph.execute<Inputs<0>, 1>(context, {{4}});
+
+      auto t1 = std::chrono::system_clock::now();
+
+      std::cout << "first configurable cache test " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+                << std::endl;
+    }
+
+
+    {
+      auto t0 = std::chrono::system_clock::now();
+
+      auto output = graph.execute<Inputs<0>, 1>(context, {{4}});
+
+      auto t1 = std::chrono::system_clock::now();
+
+      std::cout << "second configurable cache test " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+                << std::endl;
+    }
+
+
+    {
+      auto t0 = std::chrono::system_clock::now();
+
+      context.nodePtr<0>()->config = 4.f;
+
+
+      auto output = graph.execute<Inputs<0>, 1>(context, {{4}});
+
+      auto t1 = std::chrono::system_clock::now();
+
+      std::cout << "third configurable cache test " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+                << std::endl;
+    }
+
+
+  }
 
   {
 
@@ -68,6 +127,42 @@ int main() {
       std::cout << "lazy cache test " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
                 << std::endl;
     }
+  }
+
+  {
+    auto graph = withNodes<TestManyCacheNodes >::andEdges<TestManyCacheEdges >{};
+    auto context = graph.createContext();
+
+    std::cout << hasCachePredicate<CacheTrait<LongOp1>>::value << std::endl;
+
+    std::cout << hasCachePredicate<
+      std::tuple_element_t<0, typename decltype(context)::AllNodes>
+    >::value << std::endl;
+
+
+    struct NoKeeper {
+      void apply(CacheTraitBase* cacheBase) {
+        std::cout << "no keep for " << cacheBase << std::endl;
+        cacheBase->keep = []() {
+          return false;
+        };
+      }
+    };
+
+    context.bulkApply<NoKeeper, hasCachePredicate>();
+
+
+    auto t0 = std::chrono::system_clock::now();
+
+    graph.topDown<
+        std::tuple<Int<0>, Int<1>>, 2>(context, {{4}, {5}});
+
+
+
+    auto t1 = std::chrono::system_clock::now();
+
+    std::cout << "many caches test " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+              << std::endl;
   }
 
   {

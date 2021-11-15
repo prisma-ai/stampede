@@ -37,9 +37,17 @@ struct CacheTraitBase {
   std::function<bool()> keep = []() { return true; };
 };
 
+
+template<typename T>
+using cache_t = decltype(std::declval<T &>().cache);
+
+template<typename T>
+static constexpr bool has_cache = std::experimental::is_detected_v<cache_t, T>;
+
 template<typename NextT>
 struct CacheTrait : CacheTraitBase, TraitBase<NextT> {
   using Next = NextT;
+  using Param = typename Next::Param;
 
   using Output = Cache<typename Next::Output>;
 
@@ -117,6 +125,26 @@ struct CacheTrait : CacheTraitBase, TraitBase<NextT> {
   }
 };
 
+
+
+
+template <typename NextT>
+struct ConfigurableCacheTrait : CacheTrait<NextT> {
+ public:
+  using Param = typename NextT::Param;
+  ConfigurableCacheTrait() {
+   static_cast<CacheTraitBase*>(this)->keep = [&]() {
+     if(!lastConfig.has_value()) {
+       lastConfig = static_cast<NodeBase<Param>*>(this)->config;
+       return false;
+     }
+     return static_cast<NodeBase<Param>*>(this)->config == *lastConfig;
+   };
+  }
+ private:
+  std::optional<Param> lastConfig;
+};
+
 template <typename T>
 struct Future {
   std::shared_future<T> data;
@@ -140,6 +168,8 @@ struct AsyncPoolBase {
 template<typename NextT>
 struct AsyncPoolTrait : AsyncPoolBase, TraitBase<NextT> {
   using Next = NextT;
+  using Param = typename Next::Param;
+
 
 
   using Output = Future<typename NextT::Output>;
@@ -176,6 +206,8 @@ struct AsyncPoolTrait : AsyncPoolBase, TraitBase<NextT> {
 template<typename NextT>
 struct AsyncTrait : TraitBase<NextT> {
   using Next = NextT;
+  using Param = typename Next::Param;
+
 
 
   using Output = Future<typename NextT::Output>;
