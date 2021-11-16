@@ -20,12 +20,20 @@ Suppose we want to add two number, the calculation of which is a heavy operation
 
 Prototype:
 ```
+declare_node({UserDefined}, {StateType}, {OutputType}, {InputTypesWithComma})
+{OutputType} {UserDefined}::runImpl({InputTypesWithComma} args...) {
+    ...
+}
+
+```
+that expands to:
+```
 template <typename...>
-class {UserDefined} : public Node<{UserDefined}, {OutputType}, {InputTypesWithComma}> {
+class {UserDefined} : public Node<{UserDefined}, {StateType}, {OutputType}, {InputTypesWithComma}> {
     friend class Node;
 
 public:
-    {UserDefined}(): Node<{UserDefined}, {OutputType}, {InputTypesWithComma}>("{user_defined}") {}
+    {UserDefined}(): Node<{UserDefined}, {StateType}, {OutputType}, {InputTypesWithComma}>("{user_defined}") {}
 private:
     {OutputType} runImpl({InputTypesWithComma} args...) {
       ...
@@ -137,6 +145,9 @@ In example we're assuming that `Id<>` (id `0`) will be source, `Sum<>` (id `3`) 
 std::tuple<int> input = ...;
 auto output = withNodes<NODES>::andEdges<EDGES>{}.execute<Inputs<Int<0>>, 3, PLAN>( { input } );
 ```
+
+See example of semipractical case of migrating at `stampede` in `src/cv_samples`
+
 ## Building
 
 For building example / test:
@@ -155,5 +166,13 @@ CMakeLists.txt
 include_directory({path/to/stampede/src})
 ...
 ```
+
+## Thanks
+
+@evsluzh for early-stage review
+
+## Used in
+
+
 
 
