@@ -16,6 +16,10 @@
 
 namespace spd {
 
+/*
+ * Simple wrapper for node declaration
+ * If you don't like macros -- just copy
+ */
 #define declare_node(name, param, out, ...) \
 class name : public spd::Node<name, param, out, __VA_ARGS__> { \
   friend class Node;  \
@@ -27,6 +31,9 @@ class name : public spd::Node<name, param, out, __VA_ARGS__> { \
                                             \
 };
 
+/*
+ * Used in empty node state declaration
+ */
 struct Unit {};
 
 constexpr static auto BASE_GRAPH_CALLS_LOG = false;
@@ -43,6 +50,12 @@ using next_t = typename T::Next;
 template<typename T>
 constexpr bool has_next = std::experimental::is_detected_v<next_t, T>;
 
+/**
+ * Unwraps value from all side-effects from traits
+ * @tparam Output
+ * @param output -- wrapped value
+ * @return unwrapped value
+ */
 template<typename Output>
 auto value(Output output) {
   if constexpr (has_value<Output>) {
@@ -59,6 +72,17 @@ struct NodeBase {
 
 };
 
+/**
+ * Base class for custom node implementation
+ * You could also set "tag" for logging purposes
+ * Serves as container for useful computations
+ * Holds input/output types, state, and sequence point resolver (could be overrided via trait)
+ *
+ * @tparam Impl
+ * @tparam ParamType
+ * @tparam OutputT
+ * @tparam InputsT
+ */
 template<typename Impl, typename ParamType, typename OutputT, typename ...InputsT>
 struct Node : NodeBase<ParamType> {
   using Output = OutputT;

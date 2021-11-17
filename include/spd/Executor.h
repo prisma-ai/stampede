@@ -132,7 +132,13 @@ struct SomethingChangedBefore<id, std::tuple<>> {
   }
 };
 
-
+/**
+ * Graph generator
+ * Provide "IndexedNodes", "Edges" via variable typenames and compile via object creation
+ * Also generates toposorted graph of links
+ * @tparam Nodes
+ * @tparam Edges
+ */
 template<typename...Nodes>
 struct withNodes {
 
@@ -146,6 +152,16 @@ struct withNodes {
 
   template<typename...Edges>
   struct andEdges {
+    /**
+     * Executes compiled graph
+     * Also generates default context
+     *
+     * @tparam SourcesIds -- input nodes ids
+     * @tparam DestId -- output node id
+     * @tparam GCPlan
+     * @param args -- tuple of inputs
+     * @return
+     */
     template<typename SourcesIds, int DestId, typename GCPlan = NoPlan>
     typename NodeAtPack<DestId, Nodes...>::type::Output
     execute(typename ArgsPackFor<SourcesIds, Nodes...>::type args) {
@@ -153,6 +169,17 @@ struct withNodes {
       return execute<SourcesIds, DestId, GCPlan>(context, args);
     };
 
+    /**
+     * Executes compiled graph with provided context
+     * See method before
+     *
+     * @tparam SourcesIds
+     * @tparam DestId
+     * @tparam GCPlan
+     * @param context
+     * @param args
+     * @return
+     */
     template<typename SourcesIds, int DestId, typename GCPlan = NoPlan>
     typename NodeAtPack<DestId, Nodes...>::type::Output
     execute(Context<Nodes...> &context, typename ArgsPackFor<SourcesIds, Nodes...>::type args) {
@@ -161,6 +188,10 @@ struct withNodes {
       return topDown<SourcesIds, DestId, path, GCPlan>(context, args);
     };
 
+    /**
+     * Generates execution context thats holds all runtime info / state
+     * @return
+     */
     auto createContext() {
       return Context<Nodes...>{};
     }
@@ -173,6 +204,18 @@ struct withNodes {
       return topDown<SourcesIds, DestId, Path, Plan>(context, args);
     }
 
+    /**
+     * Inner executor
+     * Performs top down deduction via simple recursion
+     *
+     * @tparam SourcesIds
+     * @tparam DestId
+     * @tparam Path
+     * @tparam Plan
+     * @param context
+     * @param args
+     * @return
+     */
     template<typename SourcesIds, int DestId, typename Path, typename Plan = NoPlan>
     typename NodeAtPack<DestId, Nodes...>::type::Output
     topDown(Context<Nodes...> &context, typename ArgsPackFor<SourcesIds, Nodes...>::type args) {

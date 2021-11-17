@@ -14,6 +14,11 @@ namespace spd {
 
 constexpr static auto TRAIT_LOG = false;
 
+/**
+ * All traits could contains additional state
+ * Needs to be managed
+ * @tparam NextT
+ */
 template <typename NextT>
 struct TraitBase : NextT {
   void gc() {
@@ -26,12 +31,15 @@ template<typename T>
 struct Cache {
   std::optional<T> data;
 
-
   T value() {
     return data.value();
   }
 };
 
+/**
+ * Cache needs be cleared upon some conditions
+ * Use this to declare such
+ */
 struct CacheTraitBase {
   std::function<bool()> keep = []() { return true; };
 };
@@ -49,6 +57,10 @@ struct hasCachePredicate {
 };
 
 
+/**
+ * Wraps node with cache
+ * @tparam NextT
+ */
 template<typename NextT>
 struct CacheTrait : CacheTraitBase, TraitBase<NextT> {
   using Next = NextT;
@@ -96,7 +108,16 @@ struct CacheTrait : CacheTraitBase, TraitBase<NextT> {
     }
   }
 
-
+  /**
+   * This is only node that could just return value if:
+   * 1) state not changed
+   * 2) children not changed
+   *
+   * @tparam TraitedInputsT
+   * @param args
+   * @param childrenChanged
+   * @return
+   */
   template<typename TraitedInputsT>
   Output sequencePoint(TraitedInputsT args, bool childrenChanged) {
     if(childrenChanged) {
@@ -113,6 +134,11 @@ struct CacheTrait : CacheTraitBase, TraitBase<NextT> {
 
 
 
+/**
+ * Same as CacheTrait, but generates additional (current state)
+ * And sets up default "keep" method
+ * @tparam NextT
+ */
 template <typename NextT>
 struct ConfigurableCacheTrait : CacheTrait<NextT> {
  public:
@@ -139,6 +165,7 @@ struct Future {
   }
 };
 
+
 struct AsyncPoolBase {
  public:
   void pool(std::shared_ptr<PoolBase> pool) {
@@ -150,6 +177,10 @@ struct AsyncPoolBase {
 
 };
 
+/**
+ * Wrap node to perform async execution with provided pool
+ * @tparam NextT
+ */
 template<typename NextT>
 struct AsyncPoolTrait : AsyncPoolBase, TraitBase<NextT> {
   using Next = NextT;
@@ -182,6 +213,10 @@ struct AsyncPoolTrait : AsyncPoolBase, TraitBase<NextT> {
 
 };
 
+/**
+ * Wraps node to provide async execution without pool
+ * @tparam NextT
+ */
 template<typename NextT>
 struct AsyncTrait : TraitBase<NextT> {
   using Next = NextT;

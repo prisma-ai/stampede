@@ -12,6 +12,21 @@ namespace spd {
 
 struct BFSLastRecentlyUsedGCPlan {};
 
+/**
+ * Forms a map like:
+ *  std::tuple<Children>
+ * where Child:
+ *  std::tuple<NodeId, ChildId>
+ * via BFS toposort
+ *
+ * This used not only for GC so XXX: rename
+ * Also use this map anytime when you need some child dependencies such as cache checking
+ *
+ * @tparam FromTuple
+ * @tparam Edges
+ *
+ * @field gcMap -- toposorted map
+ */
 template<typename FromTuple, typename ...Edges>
 struct BFSLastRecentlyUsedGCPlanImpl {
 
@@ -24,7 +39,6 @@ struct BFSLastRecentlyUsedGCPlanImpl {
     constexpr static auto count_v = InDegreeCount::value;
 
   };
-
 
 
   using TEdges = std::tuple<Edges...>;

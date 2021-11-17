@@ -35,6 +35,10 @@ int TestNode::runImpl(int arg) {
   return arg;
 }
 
+/**
+ * This execution unit contains all compile-time tests
+ * @return
+ */
 int main() {
   {
     auto params = std::make_tuple(1, 2);
