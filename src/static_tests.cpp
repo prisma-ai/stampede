@@ -23,11 +23,7 @@ struct HasCache {
 struct HasntCache {
 
 };
-
-template<typename T>
-struct hasCachePredicate {
-  constexpr static auto value = has_cache<T>;
-};
+//
 
 
 template<typename NodeId, typename InDegreeCount>
@@ -98,16 +94,14 @@ int main() {
 
   {
 
-    auto graph = withNodes<TestCacheNodes >::andEdges<TestCacheEdges>{};
+    auto graph = withNodes<
+        IndexedNode<0, CacheTrait<LongOp1>>, IndexedNode<1, CacheTrait<LongSummer>> >::andEdges<TestCacheEdges>{};
     auto context = graph.createContext();
-
-    context.nodePtr<0>()->cache.data = 2;
-    context.nodePtr<0>()->cache.dirty = true;
 
     {
       auto t0 = std::chrono::system_clock::now();
 
-      auto output = graph.topDown<std::tuple<Int<0>>, 1>(context, {{4}});
+      auto output = graph.execute<std::tuple<Int<0>>, 1>(context, {{4}});
 
       auto t1 = std::chrono::system_clock::now();
 
@@ -116,10 +110,11 @@ int main() {
     }
 
     {
+      context.nodePtr<0>()->dirty = true;
+
       auto t0 = std::chrono::system_clock::now();
 
-      auto output = graph.topDown<std::tuple<Int<0>>, 1>(context, {{4}});
-
+      auto output = graph.execute<std::tuple<Int<0>>, 1>(context, {{4}});
 
 
       auto t1 = std::chrono::system_clock::now();
@@ -154,7 +149,7 @@ int main() {
 
     auto t0 = std::chrono::system_clock::now();
 
-    graph.topDown<
+    graph.execute<
         std::tuple<Int<0>, Int<1>>, 2>(context, {{4}, {5}});
 
 
@@ -217,7 +212,7 @@ int main() {
     context.nodePtr<2>()->pool(pool);
 
 
-    auto output = graph.topDown<std::tuple<Int<0>>, 3>(context, {{4}});
+    auto output = graph.execute<std::tuple<Int<0>>, 3>(context, {{4}});
 
     auto t1 = std::chrono::system_clock::now();
 
@@ -239,9 +234,10 @@ int main() {
   }
 
   {
-    auto g = withNodes<IndexedNode<0, Id>>::andEdges{};
-    auto o = g.execute<Inputs<0>, 0>({6});
-    std::cout << o << std::endl;
+//    XXX: edge case for current toposort impl
+//    auto g = withNodes<IndexedNode<0, Id>>::andEdges{};
+//    auto o = g.execute<Inputs<0>, 0>({6});
+//    std::cout << o << std::endl;
   }
 
   {
@@ -483,7 +479,7 @@ int main() {
   {
     auto t0 = std::chrono::system_clock::now();
 
-    auto output = withNodes<TestAsyncNodes >::andEdges<TestAsyncEdges >{}.topDown<std::tuple<Int<0>>, 3>({{4}});
+    auto output = withNodes<TestAsyncNodes >::andEdges<TestAsyncEdges >{}.execute<std::tuple<Int<0>>, 3>({{4}});
 
     auto t1 = std::chrono::system_clock::now();
 
@@ -494,7 +490,7 @@ int main() {
   {
     auto t0 = std::chrono::system_clock::now();
 
-    auto output = withNodes<TestSyncNodes >::andEdges<TestSyncEdges >{}.topDown<std::tuple<Int<0>>, 3>({{4}});
+    auto output = withNodes<TestSyncNodes >::andEdges<TestSyncEdges >{}.execute<std::tuple<Int<0>>, 3>({{4}});
 
     auto t1 = std::chrono::system_clock::now();
 
@@ -505,7 +501,7 @@ int main() {
   {
     auto t0 = std::chrono::system_clock::now();
 
-    auto output = withNodes<TestNoCacheNodes >::andEdges<TestNoCacheEdges >{}.topDown<std::tuple<Int<0>>, 1>({{4}});
+    auto output = withNodes<TestNoCacheNodes >::andEdges<TestNoCacheEdges >{}.execute<std::tuple<Int<0>>, 1>({{4}});
 
     auto t1 = std::chrono::system_clock::now();
 
@@ -516,7 +512,7 @@ int main() {
   {
     auto t0 = std::chrono::system_clock::now();
 
-    auto output = withNodes<TestCacheNodes >::andEdges<TestCacheEdges>{}.topDown<std::tuple<Int<0>>, 1>({{4}});
+    auto output = withNodes<TestCacheNodes >::andEdges<TestCacheEdges>{}.execute<std::tuple<Int<0>>, 1>({{4}});
 
     auto t1 = std::chrono::system_clock::now();
 
@@ -535,7 +531,7 @@ int main() {
     context.nodePtr<0>()->keep = []() { return false; };
 
 
-    auto output = executor.topDown<std::tuple<Int<0>>, 1>(context, {{4}});
+    auto output = executor.execute<std::tuple<Int<0>>, 1>(context, {{4}});
 
     auto t1 = std::chrono::system_clock::now();
 
