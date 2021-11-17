@@ -52,44 +52,86 @@ struct Context {
 };
 
 
-
-
-
-
-
 // effectful map
-template<typename Plan, typename Applier, typename Input, typename Output, typename Ids>
+template<typename Plan, typename Path, typename Applier, typename Input, typename Output, typename Ids>
 struct SequenceMap {
 
   template<typename Context, int ...Ts>
   constexpr auto apply(Context &context, Input input, std::integer_sequence<int, Ts...>) -> Output {
     Applier applier;
 
-    return {applier.template topDown<std::tuple_element_t<Ts, Ids>::value, Plan>(context, input)...};
+    return {applier.template topDown<std::tuple_element_t<Ts, Ids>::value, Path, Plan>(context, input)...};
   }
 };
 
 // effectful map
 template<int id, typename Plan>
-struct planApplier;
+struct GCPlanApplier;
 
 template<int id, typename PHead, typename ...PTail>
-struct planApplier<id, std::tuple<PHead, PTail...>> {
+struct GCPlanApplier<id, std::tuple<PHead, PTail...>> {
   template<typename Context>
   constexpr auto apply(Context &context) {
     if constexpr (id == PlanLast<PHead>::value) {
       constexpr auto depId = PlanDep<PHead>::value;
       (&std::get<depId>(context.allNodes))->gc();
     }
-    planApplier<id, std::tuple<PTail...>>{}.template apply<Context>(context);
+    GCPlanApplier<id, std::tuple<PTail...>>{}.template apply<Context>(context);
   }
 };
 
 template<int id>
-struct planApplier<id, std::tuple<>> {
+struct GCPlanApplier<id, std::tuple<>> {
   template<typename Context>
   constexpr auto apply(Context &context) {}
 };
+
+// effectful map
+template<int id, typename Plan>
+struct CleanApplier;
+
+template<int id, typename PHead, typename ...PTail>
+struct CleanApplier<id, std::tuple<PHead, PTail...>> {
+  template<typename Context>
+  constexpr auto apply(Context &context) {
+    if constexpr (id == PlanLast<PHead>::value) {
+      constexpr auto depId = PlanDep<PHead>::value;
+      (&std::get<depId>(context.allNodes))->dirty = false;
+    }
+    CleanApplier<id, std::tuple<PTail...>>{}.template apply<Context>(context);
+  }
+};
+
+template<int id>
+struct CleanApplier<id, std::tuple<>> {
+  template<typename Context>
+  constexpr auto apply(Context &context) {}
+};
+
+template<int id, typename Plan>
+struct SomethingChangedBefore;
+
+template<int id, typename PHead, typename ...PTail>
+struct SomethingChangedBefore<id, std::tuple<PHead, PTail...>> {
+  template<typename Context>
+  constexpr auto apply(Context &context) {
+    auto changed = false;
+    if constexpr (id == PlanLast<PHead>::value) {
+      constexpr auto depId = PlanDep<PHead>::value;
+      changed = (&std::get<depId>(context.allNodes))->dirty;
+    }
+    return changed || SomethingChangedBefore<id, std::tuple<PTail...>>{}.template apply<Context>(context);
+  }
+};
+
+template<int id>
+struct SomethingChangedBefore<id, std::tuple<>> {
+  template<typename Context>
+  constexpr auto apply(Context &context) {
+    return false;
+  }
+};
+
 
 template<typename...Nodes>
 struct withNodes {
@@ -104,7 +146,6 @@ struct withNodes {
 
   template<typename...Edges>
   struct andEdges {
-
     template<typename SourcesIds, int DestId, typename GCPlan = NoPlan>
     typename NodeAtPack<DestId, Nodes...>::type::Output
     execute(typename ArgsPackFor<SourcesIds, Nodes...>::type args) {
@@ -115,26 +156,24 @@ struct withNodes {
     template<typename SourcesIds, int DestId, typename GCPlan = NoPlan>
     typename NodeAtPack<DestId, Nodes...>::type::Output
     execute(Context<Nodes...> &context, typename ArgsPackFor<SourcesIds, Nodes...>::type args) {
-      if constexpr (std::is_same_v<GCPlan, BFSLastRecentlyUsedGCPlan>) {
-        using gcPlan = typename BFSLastRecentlyUsedGCPlanImpl<SourcesIds, Edges...>::gcMap;
-        return topDown<SourcesIds, DestId, gcPlan>(context, args);
-      } else {
-        return topDown<SourcesIds, DestId, NoPlan>(context, args);
-      }
+      using path = typename BFSLastRecentlyUsedGCPlanImpl<SourcesIds, Edges...>::gcMap;
+
+      return topDown<SourcesIds, DestId, path, GCPlan>(context, args);
     };
 
     auto createContext() {
       return Context<Nodes...>{};
     }
 
-    template<typename SourcesIds, int DestId, typename Plan = NoPlan>
+   private:
+    template<typename SourcesIds, int DestId, typename Path, typename Plan = NoPlan>
     typename NodeAtPack<DestId, Nodes...>::type::Output
     topDown(typename ArgsPackFor<SourcesIds, Nodes...>::type args) {
       Context<Nodes...> context;
-      return topDown<SourcesIds, DestId, Plan>(context, args);
+      return topDown<SourcesIds, DestId, Path, Plan>(context, args);
     }
 
-    template<typename SourcesIds, int DestId, typename Plan = NoPlan>
+    template<typename SourcesIds, int DestId, typename Path, typename Plan = NoPlan>
     typename NodeAtPack<DestId, Nodes...>::type::Output
     topDown(Context<Nodes...> &context, typename ArgsPackFor<SourcesIds, Nodes...>::type args) {
 
@@ -153,9 +192,6 @@ struct withNodes {
 
         return dest->runPack(std::get<sourceInDest::value>(args), indexes{});
       } else {
-
-        constexpr auto SourceId = std::tuple_element_t<0, SourcesIds>::value;
-
         using Prerequisites = typename PrerequisitesForPack<DestId, Edges...>::type;
         using PrerequisitesOutputs = typename withNodes<Nodes...>::template outputsFor<Prerequisites>::type;
 
@@ -163,26 +199,20 @@ struct withNodes {
 
         auto inputsTemp = SequenceMap<
             Plan,
+            Path,
             withNodes<Nodes...>::andEdges<Edges...>::fixedInput<SourcesIds>,
             typename ArgsPackFor<SourcesIds, Nodes...>::type,
             PrerequisitesOutputs,
             Prerequisites>{}.apply(context, args, indexes);
 
-
-        // overriding seq points via traits?? or nodes?
-        // sequence point (default)
-
-//        auto values = std::apply(
-//            [](auto ...x) -> typename Dest::Inputs { return std::make_tuple(value(x)...); }, inputsTemp);
-//
-//        auto output = dest->runPack(values,
-//                                    std::make_integer_sequence<int, std::tuple_size_v<typename Dest::Inputs>>{});
-        auto output = dest->sequencePoint(inputsTemp);
+        auto output = dest->sequencePoint(inputsTemp, SomethingChangedBefore<DestId, Path>{}.apply(context));
 
         // GC:
         if constexpr (!std::is_same_v<Plan, NoPlan>) {
-          planApplier<DestId, Plan>{}.apply(context);
+          GCPlanApplier<DestId, Path>{}.apply(context);
         }
+
+        CleanApplier<DestId, Path>{}.apply(context);
 
         return output;
 
@@ -191,10 +221,10 @@ struct withNodes {
 
     template<typename SourcesIds>
     struct fixedInput {
-      template<int DestId, typename Plan>
+      template<int DestId, typename Path, typename Plan>
       typename NodeAtPack<DestId, Nodes...>::type::Output
       topDown(Context<Nodes...> &context, typename ArgsPackFor<SourcesIds, Nodes...>::type args) {
-        return withNodes<Nodes...>::andEdges<Edges...>{}.topDown<SourcesIds, DestId, Plan>(context, args);
+        return withNodes<Nodes...>::andEdges<Edges...>{}.topDown<SourcesIds, DestId, Path, Plan>(context, args);
       }
     };
 

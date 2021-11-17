@@ -55,13 +55,17 @@ auto value(Output output) {
 template<typename Param>
 struct NodeBase {
   Param config;
+  bool dirty = true;
+
 };
 
 template<typename Impl, typename ParamType, typename OutputT, typename ...InputsT>
 struct Node : NodeBase<ParamType> {
   using Output = OutputT;
   using Inputs = std::tuple<InputsT...>;
+
   using Param = ParamType;
+
 
   explicit Node(const std::string &tag = "node") {
     tag_ = tag;
@@ -81,6 +85,7 @@ struct Node : NodeBase<ParamType> {
     if constexpr (BASE_GRAPH_CALLS_LOG) {
       std::cout << tag_ << " executed" << std::endl;
     }
+    this->dirty = true;
     return static_cast<Impl *>(this)->runImpl(std::get<N>(args)...);
   }
 
@@ -91,7 +96,7 @@ struct Node : NodeBase<ParamType> {
   }
 
   template<typename TraitedInputsT>
-  OutputT sequencePoint(TraitedInputsT args) {
+  OutputT sequencePoint(TraitedInputsT args, bool childrenChanged) {
     auto values = std::apply(
         [](auto ...x) -> Inputs { return std::make_tuple(value(x)...); }, args);
     return runPack(values, std::make_integer_sequence<int, std::tuple_size_v<TraitedInputsT>>{});

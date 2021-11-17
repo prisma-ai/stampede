@@ -22,11 +22,10 @@ struct TraitBase : NextT {
 
 };
 
-
 template<typename T>
 struct Cache {
   std::optional<T> data;
-  bool dirty = true;
+
 
   T value() {
     return data.value();
@@ -39,10 +38,16 @@ struct CacheTraitBase {
 
 
 template<typename T>
-using cache_t = decltype(std::declval<T &>().cache);
+using cache_t = decltype(std::declval<T &>().data);
 
 template<typename T>
 static constexpr bool has_cache = std::experimental::is_detected_v<cache_t, T>;
+
+template<typename T>
+struct hasCachePredicate {
+  constexpr static auto value = has_cache<T>;
+};
+
 
 template<typename NextT>
 struct CacheTrait : CacheTraitBase, TraitBase<NextT> {
@@ -59,18 +64,18 @@ struct CacheTrait : CacheTraitBase, TraitBase<NextT> {
   Output runPack(typename Next::Inputs args, std::integer_sequence<int, N...> ids) {
     // no cache -- recompute
     // cache and no keep -- recompute
-    if (!cache.data.has_value()) {
+    if (!cache.data.has_value() || force) {
       if constexpr (TRAIT_LOG) {
         std::cout << "renewing cache" << std::endl;
       }
       cache.data = static_cast<Next *>(this)->runPack(args, ids);
-      cache.dirty = true;
+
+      force = false;
 
     } else {
       if (!static_cast<CacheTraitBase *>(this)->keep()) {
         cache.data = {};
         cache.data = static_cast<Next *>(this)->runPack(args, ids);
-        cache.dirty = true;
       }
       if constexpr (TRAIT_LOG) {
         std::cout << "using cached" << std::endl;
@@ -82,7 +87,7 @@ struct CacheTrait : CacheTraitBase, TraitBase<NextT> {
 
   void gc() {
     cache.data = {};
-    cache.dirty = true;
+//    cache.dirty = true;
 
     static_cast<Next *>(this)->gc();
 
@@ -92,36 +97,16 @@ struct CacheTrait : CacheTraitBase, TraitBase<NextT> {
   }
 
 
-  template<typename T>
-  struct hasCachePredicate {
-    constexpr static auto value = has_cache<T>;
-  };
-
-
-
   template<typename TraitedInputsT>
-  Output sequencePoint(TraitedInputsT args) {
-    using allHasCache = typename all<hasCachePredicate, TraitedInputsT>::type;
-    if constexpr(allHasCache::value) {
-
-
-      auto anyDirty = std::apply([](auto ...x) -> bool {  return (... || x.dirty); }, args);
-      if(anyDirty) {
-        force = true;
-        auto values = std::apply(
-            [](auto ...x) -> typename Next::Inputs { return std::make_tuple(value(x)...); }, args);
-        return runPack(values, std::make_integer_sequence<int, std::tuple_size_v<TraitedInputsT>>{});
-      } else {
-        return cache;
-      }
-
-
-    } else {
+  Output sequencePoint(TraitedInputsT args, bool childrenChanged) {
+    if(childrenChanged) {
+      force = true;
       auto values = std::apply(
           [](auto ...x) -> typename Next::Inputs { return std::make_tuple(value(x)...); }, args);
       return runPack(values, std::make_integer_sequence<int, std::tuple_size_v<TraitedInputsT>>{});
+    } else {
+      return cache;
     }
-
   }
 };
 
@@ -170,8 +155,6 @@ struct AsyncPoolTrait : AsyncPoolBase, TraitBase<NextT> {
   using Next = NextT;
   using Param = typename Next::Param;
 
-
-
   using Output = Future<typename NextT::Output>;
 
   template<int ...N>
@@ -191,15 +174,11 @@ struct AsyncPoolTrait : AsyncPoolBase, TraitBase<NextT> {
 
 
   template<typename TraitedInputsT>
-  Output sequencePoint(TraitedInputsT args) {
+  Output sequencePoint(TraitedInputsT args, bool childrenChanged) {
     auto values = std::apply(
         [](auto ...x) -> typename Next::Inputs { return std::make_tuple(value(x)...); }, args);
     return runPack(values, std::make_integer_sequence<int, std::tuple_size_v<TraitedInputsT>>{});
   }
-
-//  void gc() {
-//    static_cast<Next *>(this)->gc();
-//  }
 
 };
 
@@ -228,15 +207,11 @@ struct AsyncTrait : TraitBase<NextT> {
 
 
   template<typename TraitedInputsT>
-  Output sequencePoint(TraitedInputsT args) {
+  Output sequencePoint(TraitedInputsT args, bool childrenChanged) {
     auto values = std::apply(
         [](auto ...x) -> typename Next::Inputs { return std::make_tuple(value(x)...); }, args);
     return runPack(values, std::make_integer_sequence<int, std::tuple_size_v<TraitedInputsT>>{});
   }
-
-//  void gc() {
-//    static_cast<Next *>(this)->gc();
-//  }
 };
 
 }

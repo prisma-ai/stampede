@@ -20,6 +20,19 @@ class Summer : public Node<Summer, Unit, int, int, int> {
   }
 };
 
+class LongSummer : public Node<LongSummer, Unit, int, int, int> {
+  friend class Node;
+
+ public:
+  LongSummer() : Node<LongSummer, Unit, int, int, int>("long summer") {}
+ private:
+  int runImpl(int arg0, int arg1) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    return arg0 + arg1;
+  }
+};
+
 class Mul2 : public Node<Mul2, Unit, int, int> {
   friend class Node;
 
