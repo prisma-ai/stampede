@@ -167,14 +167,7 @@ struct Future {
 
 
 struct AsyncPoolBase {
- public:
-  void pool(std::shared_ptr<PoolBase> pool) {
-    pool_ = std::move(pool);
-  }
-
- protected:
-  std::shared_ptr<PoolBase> pool_;
-
+  std::shared_ptr<PoolBase> pool;
 };
 
 /**
@@ -195,7 +188,7 @@ struct AsyncPoolTrait : AsyncPoolBase, TraitBase<NextT> {
     }
 
     auto task = Output {
-        .data = pool_->enqueue<typename Next::Output>([args, ids, this]() {
+        .data = pool->enqueue<typename Next::Output>([args, ids, this]() {
           return static_cast<Next *>(this)->runPack(args, ids);
         })
     };

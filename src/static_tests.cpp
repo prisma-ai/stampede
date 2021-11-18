@@ -25,7 +25,6 @@ struct HasntCache {
 };
 //
 
-
 template<typename NodeId, typename InDegreeCount>
 using InDegree = BFSLastRecentlyUsedGCPlanImpl<std::tuple<Int<0>>, TestGCEdges >::InDegree<NodeId, InDegreeCount>;
 
@@ -212,8 +211,8 @@ int main() {
 
     auto graph = withNodes<TestAsyncPoolNodes >::andEdges<TestAsyncPoolEdges >{};
     auto context = graph.createContext();
-    context.nodePtr<1>()->pool(pool);
-    context.nodePtr<2>()->pool(pool);
+    context.nodePtr<1>()->pool = pool;
+    context.nodePtr<2>()->pool =pool;
 
 
     auto output = graph.execute<std::tuple<Int<0>>, 3>(context, {{4}});
