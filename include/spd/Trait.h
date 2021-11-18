@@ -120,14 +120,10 @@ struct CacheTrait : CacheTraitBase, TraitBase<NextT> {
    */
   template<typename TraitedInputsT>
   Output sequencePoint(TraitedInputsT args, bool childrenChanged) {
-    if(childrenChanged) {
-      force = true;
-      auto values = std::apply(
-          [](auto ...x) -> typename Next::Inputs { return std::make_tuple(value(x)...); }, args);
-      return runPack(values, std::make_integer_sequence<int, std::tuple_size_v<TraitedInputsT>>{});
-    } else {
-      return cache;
-    }
+    force = childrenChanged;
+    auto values = std::apply(
+        [](auto ...x) -> typename Next::Inputs { return std::make_tuple(value(x)...); }, args);
+    return runPack(values, std::make_integer_sequence<int, std::tuple_size_v<TraitedInputsT>>{});
   }
 };
 

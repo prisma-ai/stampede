@@ -89,6 +89,8 @@ int main() {
       context.nodePtr<4>()->config = backgroundIntensity;
       context.nodePtr<5>()->config = blendingIntensity;
 
+      context.nodePtr<0>()->dirty = inputChanged;
+
       graph.execute<Inputs<0>, 5>(context, {{image}});
 
       auto t1 = std::chrono::system_clock::now();
