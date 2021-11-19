@@ -150,8 +150,12 @@ struct withNodes {
     using type = std::tuple<typename NodeAtPack<Ts::value, Nodes...>::type::Output ...>;
   };
 
+
+
   template<typename...Edges>
   struct andEdges {
+    using GNodes = std::tuple<Nodes...>;
+    using GContext = Context<Nodes...>;
     /**
      * Executes compiled graph
      * Also generates default context
@@ -195,6 +199,8 @@ struct withNodes {
     auto createContext() {
       return Context<Nodes...>{};
     }
+
+
 
    private:
     template<typename SourcesIds, int DestId, typename Path, typename Plan = NoPlan>

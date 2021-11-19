@@ -9,23 +9,23 @@
 namespace spd {
 
 class Summer : public Node<Summer, Unit, int, int, int> {
-  friend class Node;
+//  friend class Node;
 
  public:
 
   Summer() : Node<Summer, Unit, int, int, int>("summer") {}
- private:
+// private:
   int runImpl(int arg0, int arg1) {
     return arg0 + arg1;
   }
 };
 
 class LongSummer : public Node<LongSummer, Unit, int, int, int> {
-  friend class Node;
+//  friend class Node;
 
  public:
   LongSummer() : Node<LongSummer, Unit, int, int, int>("long summer") {}
- private:
+// private:
   int runImpl(int arg0, int arg1) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
@@ -34,32 +34,32 @@ class LongSummer : public Node<LongSummer, Unit, int, int, int> {
 };
 
 class Mul2 : public Node<Mul2, Unit, int, int> {
-  friend class Node;
+//  friend class Node;
 
  public:
   Mul2() : Node<Mul2, Unit, int, int>("mul2") {}
- private:
+// private:
   int runImpl(int arg) {
     return arg * 2;
   }
 };
 
 class Stringify : public Node<Stringify, Unit, std::string, int> {
-  friend class Node;
+//  friend class Node;
  public:
 
   Stringify() : Node<Stringify, Unit, std::string, int>("stringify") {}
- private:
+// private:
   std::string runImpl(int arg) {
     return std::to_string(arg);
   }
 };
 
 class Dummy : public Node<Dummy, Unit, std::string, int, std::string> {
-  friend class Node;
+//  friend class Node;
  public:
   Dummy() : Node<Dummy, Unit, std::string, int, std::string>("dummy") {}
- private:
+// private:
   std::string runImpl(int arg0, std::string arg1) {
     std::stringstream os;
     os << arg0;
@@ -72,10 +72,10 @@ class Dummy : public Node<Dummy, Unit, std::string, int, std::string> {
 
 
 class LongOp1 : public Node<LongOp1, float, int, int> {
-  friend class Node;
+//  friend class Node;
  public:
   LongOp1() : Node<LongOp1, float, int, int>("LongOp1") {}
- private:
+// private:
   int runImpl(int args) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     return args;
@@ -84,11 +84,11 @@ class LongOp1 : public Node<LongOp1, float, int, int> {
 
 
 class LongOp2 : public Node<LongOp2, Unit, int, int> {
-  friend class Node;
+//  friend class Node;
 
  public:
   LongOp2() : Node<LongOp2, Unit, int, int>("LongOp2") {}
- private:
+// private:
 
   int runImpl(int args) {
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -97,11 +97,11 @@ class LongOp2 : public Node<LongOp2, Unit, int, int> {
 };
 
 class Id : public Node<Id, Unit, int, int> {
-  friend class Node;
+//  friend class Node;
 
  public:
   Id() : Node<Id, Unit, int, int>("Id") {}
- private:
+// private:
 
   int runImpl(int arg) {
     return arg;
