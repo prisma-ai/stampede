@@ -16,18 +16,18 @@ struct BulkApplier;
 
 template<typename NodesT, typename Applier, template<typename> typename Condition, int Id, typename Head, typename ...Tail>
 struct BulkApplier<NodesT, Applier, Condition, Id, std::tuple<Head, Tail...>> {
-  void apply(NodesT nodes) {
+  void apply(Applier applier, NodesT nodes) {
     if constexpr(Condition<std::tuple_element_t<Id, NodesT>>::value) {
-      Applier{}.apply(&std::get<Id>(nodes));
+      applier.apply(&std::get<Id>(nodes));
     }
 
-    BulkApplier<NodesT, Applier, Condition, Id + 1, std::tuple<Tail...>>{}.apply(nodes);
+    BulkApplier<NodesT, Applier, Condition, Id + 1, std::tuple<Tail...>>{}.apply(applier, nodes);
   }
 };
 
 template<typename NodesT, typename Applier, template<typename> typename Condition, int Id>
 struct BulkApplier<NodesT, Applier, Condition, Id, std::tuple<>> {
-  void apply(NodesT _) {
+  void apply(Applier applier, NodesT _) {
 
   }
 };
@@ -45,8 +45,8 @@ struct Context {
 
 
   template<typename Applier, template<typename> typename Condition>
-  void bulkApply() {
-    BulkApplier<AllNodes, Applier, Condition, 0, AllNodes>{}.apply(allNodes);
+  void bulkApply(Applier applier) {
+    BulkApplier<AllNodes, Applier, Condition, 0, AllNodes>{}.apply(applier, allNodes);
   }
 
 };

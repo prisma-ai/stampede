@@ -192,7 +192,7 @@ int main() {
       }
     };
 
-    context.bulkApply<NoKeeper, hasCachePredicate>();
+    context.bulkApply<NoKeeper, hasCachePredicate>(NoKeeper {});
 
 
     auto t0 = std::chrono::system_clock::now();
