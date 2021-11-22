@@ -117,6 +117,24 @@ struct reverse<std::tuple<>> {
   using type = std::tuple<>;
 };
 
+
+/**
+ * If we treat runtime computation as side effect
+ * @tparam I
+ * @tparam Ts
+ * @return
+ */
+template<typename Fmap, std::size_t I = 0, typename ...Ts>
+inline typename std::enable_if<I == sizeof...(Ts), void>::type
+fmap(Fmap mapper, std::tuple<Ts...>) { }
+
+
+template<typename Fmap, std::size_t I = 0, typename ...Ts>
+inline typename std::enable_if<I < sizeof...(Ts), void>::type
+fmap(Fmap mapper, std::tuple<Ts...> ts) {
+  mapper.template fmap<I>(ts);
+  fmap<I + 1>(ts);
+}
 }
 
 #endif //GRAPH_PROC_FUNCHELPER_H

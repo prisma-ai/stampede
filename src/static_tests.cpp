@@ -40,6 +40,51 @@ int TestNode::runImpl(int arg) {
  */
 int main() {
   {
+    using InnerGraph = withNodes<
+        IndexedNode<0, ConfigurableCacheTrait<LongOp1>>, IndexedNode<1, Summer>
+    >::andEdges<
+        Edge<1, Deps<0, 0>>
+    >;
+
+    using InnerGraphNode = typename GraphNode<InnerGraph, Inputs<0>, 1>::T;
+
+    using OuterGraph = withNodes<
+        IndexedNode<0, ConfigurableCacheTrait<LongOp1>>,
+        IndexedNode<1, CacheTrait<LongOp1>>,
+//        IndexedNode<1, CacheTrait<InnerGraphNode>>,
+
+        IndexedNode<2, CacheTrait<LongOp1>>
+    >::andEdges<
+        Edge<1, Deps<0>>,
+        Edge<2, Deps<1>>
+    >;
+
+    auto graph = OuterGraph {};
+    auto context = graph.createContext();
+
+    {
+      auto t0 = std::chrono::system_clock::now();
+      graph.execute<Inputs<0>, 2>(context, {{2}});
+
+      auto t1 = std::chrono::system_clock::now();
+
+      std::cout << "inner graph test 1 " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+                << std::endl;
+    }
+
+    {
+      auto t0 = std::chrono::system_clock::now();
+      graph.execute<Inputs<0>, 2>(context, {{2}});
+
+      auto t1 = std::chrono::system_clock::now();
+
+      std::cout << "inner graph test 2 " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
+                << std::endl;
+    }
+
+  }
+
+  {
     auto params = std::make_tuple(1, 2);
     auto otherParams = std::make_tuple(1, 2);
     std::cout << (params == otherParams) << std::endl;

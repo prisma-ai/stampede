@@ -41,7 +41,9 @@ struct Cache {
  * Use this to declare such
  */
 struct CacheTraitBase {
-  std::function<bool()> keep = []() { return true; };
+  std::function<bool()> keep = []() {
+    return true;
+  };
 };
 
 
@@ -148,6 +150,15 @@ struct ConfigurableCacheTrait : CacheTrait<NextT> {
      return static_cast<NodeBase<Param>*>(this)->config == *lastConfig;
    };
   }
+
+  template<int ...N>
+  typename CacheTrait<NextT>::Output runPack(typename CacheTrait<NextT>::Inputs args, std::integer_sequence<int, N...> ids) {
+    auto result = static_cast<CacheTrait<NextT>*>(this)->runPack(args, ids);
+    lastConfig = static_cast<NodeBase<Param>*>(this)->config;
+
+    return result;
+  }
+
  private:
   std::optional<Param> lastConfig;
 };
