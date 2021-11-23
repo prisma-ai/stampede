@@ -25,7 +25,7 @@ class name : public spd::Node<name, param, out, __VA_ARGS__> { \
  public:  \
   name() : spd::Node<name, param, out, __VA_ARGS__>\
                                    (#name) {}      \
- private:                            \
+                                            \
   out runImpl(__VA_ARGS__);                 \
                                             \
 };
@@ -35,7 +35,7 @@ class name : public spd::Node<name, param, out, in> { \
  public:  \
   name() : spd::Node<name, param, out, in>\
                                    (#name) {}      \
- private:                            \
+                                            \
   out runImpl(in);                 \
                                             \
 };
