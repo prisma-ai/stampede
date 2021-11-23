@@ -50,8 +50,8 @@ int main() {
 
     using OuterGraph = withNodes<
         IndexedNode<0, ConfigurableCacheTrait<LongOp1>>,
-        IndexedNode<1, CacheTrait<LongOp1>>,
-//        IndexedNode<1, CacheTrait<InnerGraphNode>>,
+//        IndexedNode<1, CacheTrait<LongOp1>>,
+        IndexedNode<1, CacheTrait<InnerGraphNode>>,
 
         IndexedNode<2, CacheTrait<LongOp1>>
     >::andEdges<
@@ -59,7 +59,13 @@ int main() {
         Edge<2, Deps<1>>
     >;
 
+    using IGInputs = typename InnerGraphNode::Inputs;
+    IGInputs t;
+
+
     auto graph = OuterGraph {};
+
+
     auto context = graph.createContext();
 
     {

@@ -330,7 +330,7 @@ struct GraphNode {
     }
 
     GNOutput runImpl(GNInputs inputs) {
-      return graph.template execute<SourcesIds, DestId>(context, inputs);
+      return graph.template execute<SourcesIds, DestId>(context, { inputs });
     }
 
     template<std::size_t I = 0, std::size_t N>

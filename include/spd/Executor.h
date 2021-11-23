@@ -246,13 +246,16 @@ struct withNodes {
 
         auto indexes = std::make_integer_sequence<int, std::tuple_size_v<typename Dest::Inputs>>{};
 
+//        static_assert(std::tuple_size_v<Prerequisites> < std::tuple_size_v<typename Dest::Inputs>,
+//            "num of declared and actual inputs diverged");
+
         auto inputsTemp = SequenceMap<
             Plan,
             Path,
             withNodes<Nodes...>::andEdges<Edges...>::fixedInput<SourcesIds>,
             typename ArgsPackFor<SourcesIds, Nodes...>::type,
             PrerequisitesOutputs,
-            Prerequisites>{}.apply(context, args, indexes);
+              Prerequisites>{}.apply(context, args, indexes);
 
         auto output = dest->sequencePoint(inputsTemp, SomethingChangedBefore<DestId, Path>{}.apply(context));
 
