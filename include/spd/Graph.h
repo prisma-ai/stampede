@@ -281,8 +281,6 @@ struct GraphNode {
     using type = typename Node::type::Param;
   };
 
-
-
   using GNInputs = typename map<InputMap, SourcesIds>::type;
   using GNOutput = typename NodeAt<DestId, typename WrappedGraph::GNodes>::type::Output;
   using GNState = typename map<ParamMap, typename WrappedGraph::GNodes>::type;
@@ -329,8 +327,17 @@ struct GraphNode {
       this->config.context = &context;
     }
 
-    GNOutput runImpl(GNInputs inputs) {
-      return graph.template execute<SourcesIds, DestId>(context, { inputs });
+//    GNOutput runImpl(GNInputs inputs) {
+//      return graph.template execute<SourcesIds, DestId>(context, { inputs });
+//    }
+    template<int ...N>
+    GNOutput runPack(GNInputs args, std::integer_sequence<int, N...>) {
+//      if constexpr (BASE_GRAPH_CALLS_LOG) {
+//        std::cout << tag_ << " executed" << std::endl;
+//      }
+      this->dirty = true;
+      return graph.template execute<SourcesIds, DestId>(context, args);
+      //      return static_cast<Impl *>(this)->runImpl(std::get<N>(args)...);
     }
 
     template<std::size_t I = 0, std::size_t N>
