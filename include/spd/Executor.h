@@ -132,6 +132,20 @@ struct SomethingChangedBefore<id, std::tuple<>> {
   }
 };
 
+
+template<typename Dest>
+constexpr auto expectedInputs = std::tuple_size_v<typename Dest::Inputs>;
+
+template<typename Prerequisites>
+constexpr auto actualInputs = std::tuple_size_v<Prerequisites>;
+
+
+//
+//
+//template<typename Dependicies>
+//constexpr auto actualInputs = std::tuple_size_v<Dependicies>;
+//
+
 /**
  * Graph generator
  * Provide "IndexedNodes", "Edges" via variable typenames and compile via object creation
@@ -246,8 +260,9 @@ struct withNodes {
 
         auto indexes = std::make_integer_sequence<int, std::tuple_size_v<typename Dest::Inputs>>{};
 
-//        static_assert(std::tuple_size_v<Prerequisites> < std::tuple_size_v<typename Dest::Inputs>,
-//            "num of declared and actual inputs diverged");
+        static_assert( actualInputs<Prerequisites> == expectedInputs<Dest>,
+            "different number of node declared and actual inputs, check graph");
+
 
         auto inputsTemp = SequenceMap<
             Plan,
