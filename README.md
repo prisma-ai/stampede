@@ -173,6 +173,7 @@ include_directory({path/to/stampede/src})
 
 @opedge for early-stage review
 
+@ashagraev for help in YaTalks report
 
 ## Used in
 
