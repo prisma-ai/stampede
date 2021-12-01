@@ -170,6 +170,7 @@ include_directory({path/to/stampede/src})
 ## Special thanks
 
 @evsluzh for early-stage review
+
 @opedge for early-stage review
 
 
