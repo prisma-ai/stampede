@@ -167,9 +167,11 @@ include_directory({path/to/stampede/src})
 ...
 ```
 
-## Thanks
+## Special thanks
 
 @evsluzh for early-stage review
+@opedge for early-stage review
+
 
 ## Used in
 
